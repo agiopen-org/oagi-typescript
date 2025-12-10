@@ -1,0 +1,33 @@
+{
+  "name": "oagi",
+  "version": "0.0.1",
+  "description": "Official API of OpenAGI Foundation",
+  "license": "MIT",
+  "homepage": "https://agiopen.org/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agiopen-org/oagi-typescript"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "bin": {
+    "oagi": "./dist/cli.js"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "devDependencies": {
+    "@types/node": "^24.10.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "pino": "^10.1.0",
+    "zod": "^4.1.13"
+  }
+}
