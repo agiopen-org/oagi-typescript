@@ -8,4 +8,7 @@
  * -----------------------------------------------------------------------------
  */
 
-export { Actor as default } from './actor/sync.js';
+export { AsyncActor, AsyncTask } from './async_.js';
+export { AsyncShortTask } from './async_short.js';
+export { Actor, Task } from './sync.js';
+export { ShortTask } from './short.js';

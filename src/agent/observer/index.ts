@@ -8,4 +8,17 @@
  * -----------------------------------------------------------------------------
  */
 
-export { Actor as default } from './actor/sync.js';
+export type {
+  ActionEvent,
+  AsyncObserver,
+  BaseEvent,
+  ImageEvent,
+  LogEvent,
+  ObserverEvent,
+  PlanEvent,
+  SplitEvent,
+  StepEvent,
+} from '../../types/index.js';
+
+export { AsyncAgentObserver, ExportFormat } from './agent_observer.js';
+export { exportToHtml, exportToJson, exportToMarkdown } from './exporters';

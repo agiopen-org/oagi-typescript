@@ -8,4 +8,16 @@
  * -----------------------------------------------------------------------------
  */
 
-export {};
+export { default } from './client.js';
+
+export { default as Client } from './client.js';
+export { default as Actor } from './actor.js';
+
+export * from './actor/index.js';
+export * from './agent/index.js';
+
+export * from './consts.js';
+export * from './errors.js';
+export { default as getLogger, logTraceOnFailure } from './logger.js';
+export * from './types/index.js';
+export * from './utils/index.js';

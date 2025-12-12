@@ -8,4 +8,7 @@
  * -----------------------------------------------------------------------------
  */
 
-export { Actor as default } from './actor/sync.js';
+// Re-export from types for convenience
+import type { AsyncObserver } from '../../types/index.js';
+
+export type { AsyncObserver };

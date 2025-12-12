@@ -11,6 +11,13 @@
 import * as z from 'zod';
 import type { Step } from './step';
 
+export const UsageSchema = z.object({
+  prompt_tokens: z.int(),
+  completion_tokens: z.int(),
+  total_tokens: z.int(),
+});
+export type Usage = z.infer<typeof UsageSchema>;
+
 /**
  * A single todo item in the task workflow.
  */

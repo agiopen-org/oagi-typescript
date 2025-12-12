@@ -8,4 +8,14 @@
  * -----------------------------------------------------------------------------
  */
 
-export { Actor as default } from './actor/sync.js';
+// Re-export from types for convenience
+export type {
+  ActionEvent,
+  BaseEvent,
+  ImageEvent,
+  LogEvent,
+  ObserverEvent,
+  SplitEvent,
+  StepEvent,
+  PlanEvent,
+} from '../../types/index.js';

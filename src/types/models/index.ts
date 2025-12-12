@@ -10,4 +10,5 @@
 
 export * from './action.js';
 export * from './client.js';
+export * from './image-config.js';
 export * from './step.js';
