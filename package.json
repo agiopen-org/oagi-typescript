@@ -27,6 +27,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "openai": "^6.10.0",
     "pino": "^10.1.0",
     "zod": "^4.1.13"
   }

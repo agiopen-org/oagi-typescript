@@ -8,13 +8,13 @@
  * -----------------------------------------------------------------------------
  */
 
+import OpenAI from 'openai';
 import {
-  API_HEALTH_ENDPOINT,
   API_KEY_HELP_URL,
   API_V1_FILE_UPLOAD_ENDPOINT,
   API_V1_GENERATE_ENDPOINT,
-  API_V2_MESSAGE_ENDPOINT,
   DEFAULT_BASE_URL,
+  DEFAULT_MAX_RETRIES,
   HTTP_CLIENT_TIMEOUT,
 } from './consts.js';
 import {
@@ -24,7 +24,6 @@ import {
   NetworkError,
   NotFoundError,
   RateLimitError,
-  RequestError,
   RequestTimeoutError,
   ServerError,
   ValidationError,
@@ -33,22 +32,17 @@ import {
 import getLogger, { logTraceOnFailure } from './logger.js';
 import {
   GenerateResponseSchema,
-  LLMResponseSchema,
   UploadFileResponseSchema,
 } from './types/index.js';
+import type { ChatCompletionMessageParam, CompletionUsage } from 'openai/resources.js';
 import type {
-  Content,
-  CreateMessageOption,
   ErrorResponse,
   GenerateOption,
   GenerateResponse,
-  HealthCheckResponse,
-  LLMResponse,
-  Message,
-  Payload,
-  PrepareMessagePayloadOption,
+  Step,
   UploadFileResponse,
 } from './types';
+import { parseRawOutput } from './utils/index.js';
 
 const logger = getLogger('client');
 
@@ -57,16 +51,23 @@ const logger = getLogger('client');
  */
 export default class Client {
   private timeout = HTTP_CLIENT_TIMEOUT;
+  private client: OpenAI;
 
   constructor(
     private baseUrl: string = process.env.OAGI_BASE_URL ?? DEFAULT_BASE_URL,
     private apiKey: string | null = process.env.OAGI_API_KEY ?? null,
+    maxRetries = DEFAULT_MAX_RETRIES,
   ) {
     if (!apiKey) {
       throw new ConfigurationError(
         `OAGI API key must be provided either as 'api_key' parameter or OAGI_API_KEY environment variable. Get your API key at ${API_KEY_HELP_URL}`,
       );
     }
+    this.client = new OpenAI({
+      baseURL: new URL('./v1', baseUrl).href,
+      apiKey,
+      maxRetries,
+    });
     logger.info(`Client initialized with base_url: ${baseUrl}`);
   }
 
@@ -94,32 +95,6 @@ export default class Client {
       headers['x-api-key'] = this.apiKey;
     }
     return headers;
-  }
-
-  /**
-   * Build OpenAI-compatible request payload.
-   *
-   * @param model Model to use
-   * @param messageHistory OpenAI-compatible message history
-   * @param taskDescription Task description
-   * @param taskId Task ID for continuing session
-   * @param temperature Sampling temperature
-   * @returns {Payload} OpenAI-compatible request payload
-   */
-  private buildPayload(
-    model: string,
-    messageHistory: Message[],
-    taskDescription?: string,
-    taskId?: string,
-    temperature?: number,
-  ): Payload {
-    return {
-      model,
-      messages: messageHistory,
-      task_description: taskDescription,
-      task_id: taskId,
-      temperature,
-    };
   }
 
   private async handleResponseError(response: Response): Promise<never> {
@@ -157,184 +132,42 @@ export default class Client {
     );
   }
 
-  private logRequestInfo(
+  /**
+   * Call OpenAI-compatible /v1/chat/completions endpoint.
+   * 
+   * @param model Model to use for inference
+   * @param messages Full message history (OpenAI-compatible format)
+   * @param temperature Sampling temperature (0.0-2.0)
+   * @param taskId Optional task ID for multi-turn conversations
+   * @returns Tuple of (Step, raw_output, Usage)
+   *   - Step: Parsed actions and reasoning
+   *   - raw_output: Raw model output string (for message history)
+   *   - Usage: Token usage statistics (or None if not available)
+   */
+  async chatCompletions(
     model: string,
-    taskDescription?: string,
+    messages: ChatCompletionMessageParam[],
+    temperature?: number,
     taskId?: string,
-  ) {
-    logger.info(`Making API request to /v2/message with model: ${model}`);
-    logger.debug(
-      `Request includes task_description: ${!!taskDescription}, task_id: ${!!taskId}`,
-    );
-  }
-
-  /**
-   * Build OpenAI-compatible user message with screenshot and optional instruction.
-   *
-   * @param screenshotUrl URL of uploaded screenshot
-   * @param instruction Optional text instruction
-   * @returns User message
-   */
-  private buildUserMessage(
-    screenshotUrl: string,
-    instruction?: string,
-  ): Message {
-    const content: Content[] = [
-      {
-        type: 'image_url',
-        image_url: {
-          url: screenshotUrl,
-        },
-      },
-    ];
-    if (instruction) {
-      content.push({
-        type: 'text',
-        text: instruction,
-      });
-    }
-
-    return {
-      role: 'user',
-      content,
-    };
-  }
-
-  /**
-   * Prepare headers and payload for /v2/message request.
-   *
-   * @returns Tuple of (headers, payload)
-   */
-  private prepareMessagePayload({
-    model,
-    uploadFileResponse,
-    taskDescription,
-    taskId,
-    instruction,
-    messagesHistory,
-    temperature,
-    apiVersion,
-    screenshotUrl,
-  }: PrepareMessagePayloadOption): [Record<string, string>, Payload] {
-    // Use provided screenshot_url or get from upload_file_response
-    if (!screenshotUrl) {
-      if (!uploadFileResponse) {
-        throw new ValueError(
-          'Either screenshot_url or upload_file_response must be provided',
-        );
-      }
-      screenshotUrl = uploadFileResponse.download_url;
-    }
-
-    // Build user message and append to history
-    messagesHistory ??= [];
-    messagesHistory.push(this.buildUserMessage(screenshotUrl, instruction));
-
-    // Build payload and headers
-    const headers = this.buildHeaders(apiVersion);
-    const payload = this.buildPayload(
+  ): Promise<[Step, rawOutput: string, CompletionUsage | undefined]> {
+    logger.info(`Making async chat completion request with model: ${model}`);
+    const response = await this.client.chat.completions.create({
       model,
-      messagesHistory,
-      taskDescription,
-      taskId,
+      messages,
       temperature,
-    );
-
-    return [headers, payload];
-  }
-
-  /**
-   * Call the /v2/message endpoint to analyze task and screenshot
-   *
-   * @returns {Promise<LLMResponse>} The response from the API
-   * @throws {ValueError} If both or neither screenshot and screenshot_url are provided
-   */
-  @logTraceOnFailure
-  async createMessage({
-    model,
-    screenshot,
-    screenshotUrl,
-    taskDescription,
-    taskId,
-    instruction,
-    messagesHistory,
-    temperature,
-    apiVersion,
-  }: CreateMessageOption): Promise<LLMResponse> {
-    // Validate that exactly one is provided
-    if (!screenshot === !screenshotUrl) {
-      throw new ValueError(
-        "Exactly one of 'screenshot' or 'screenshot_url' must be provided",
-      );
-    }
-
-    this.logRequestInfo(model, taskDescription, taskId);
-
-    // Upload screenshot to S3 if bytes provided, otherwise use URL directly
-    let uploadFileResponse: UploadFileResponse | undefined;
-    if (screenshot) {
-      uploadFileResponse = await this.putS3PresignedUrl(screenshot, apiVersion);
-    }
-
-    // Prepare message payload
-    const [headers, payload] = this.prepareMessagePayload({
-      model,
-      uploadFileResponse,
-      taskDescription,
-      taskId,
-      instruction,
-      messagesHistory,
-      temperature,
-      apiVersion,
-      screenshotUrl,
+      // @ts-expect-error extra body
+      task_id: taskId,
     });
+    const rawOutput = response.choices[0].message.content ?? '';
+    const step = parseRawOutput(rawOutput);
 
-    // Make request
-    try {
-      const response = await this.fetch(API_V2_MESSAGE_ENDPOINT, {
-        body: JSON.stringify(payload),
-        headers,
-        method: 'POST',
-      });
-      if (!response.ok) {
-        await this.handleResponseError(response);
-      }
-      const result = LLMResponseSchema.parse(await response.json());
-      if (result.error) {
-        logger.error(
-          `API Error in response: [${result.error.code}]: ${result.error.message}`,
-        );
-        throw new APIError(response, result.error.message);
-      }
-      logger.info(
-        `API request successful - task_id: ${result.task_id}, complete: ${result.is_complete}`,
-      );
-      logger.debug(`Response included ${result.actions.length} actions`);
-      return result;
-    } catch (err) {
-      this.handleHttpErrors(err);
-    }
-  }
+    // @ts-expect-error Extract task_id from response (custom field from OAGI API)
+    taskId = response.task_id;
+    const task = taskId ? `task_id: ${taskId}, ` : '';
+    const usage = response.usage ? `, tokens: ${response.usage.prompt_tokens}+${response.usage.completion_tokens}` : '';
+    logger.info(`Chat completion successful - ${task}actions: ${step.actions.length}, stop: ${step.stop}${usage}`);
 
-  /**
-   * Call the /health endpoint for health check
-   *
-   * @returns {HealthCheckResponse} Health check response
-   */
-  async healthCheck(): Promise<HealthCheckResponse> {
-    logger.debug('Making async health check request');
-    try {
-      const response = await this.fetch(API_HEALTH_ENDPOINT);
-      if (!response.ok) {
-        throw new RequestError(response);
-      }
-      const result = await response.json();
-      logger.debug('Async health check successful');
-      return result;
-    } catch (err) {
-      logger.warn(`Health check failed: ${err}`);
-      throw err;
-    }
+    return [step, rawOutput, response.usage];
   }
 
   /**
@@ -421,6 +254,7 @@ export default class Client {
    * @throws {ValueError} If workerId is invalid
    * @throws {APIError} If API returns error
    */
+  @logTraceOnFailure
   async callWorker({
     workerId,
     overallTodo,
@@ -481,8 +315,10 @@ export default class Client {
         await this.handleResponseError(response);
       }
       const result = GenerateResponseSchema.parse(await response.json());
+      // Capture request_id from response header
+      result.request_id = response.headers.get('X-Request-ID');
       logger.info(
-        `Generate request successful - tokens: ${result.prompt_tokens}+${result.completion_tokens}, `,
+        `Generate request successful - tokens: ${result.prompt_tokens}+${result.completion_tokens}, request_id: ${result.request_id}`,
       );
       return result;
     } catch (err) {

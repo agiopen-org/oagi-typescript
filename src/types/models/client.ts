@@ -9,109 +9,51 @@
  */
 
 import * as z from 'zod';
-import { ActionSchema } from './action.js';
+import type { Step } from './step';
 
-export type Content =
-  | {
-      type: 'text';
-      text: string;
-    }
-  | {
-      type: 'image_url';
-      image_url: {
-        url: string;
-      };
-    };
-
-export interface Message {
-  role: 'assistant' | 'user';
-  content: Content[];
+/**
+ * A single todo item in the task workflow.
+ */
+export interface Todo {
+  /**
+   * Todo index in the list
+   */
+  index: number;
+  /**
+   * Todo description
+   */
+  description: string;
+  /**
+   * Current status of the todo
+   */
+  status: 'pending' | 'in_progress' | 'completed' | 'blocked';
+  /**
+   * Summary of execution for this todo
+   */
+  execution_summary?: string;
 }
 
-export interface Payload {
-  model: string;
-  messages: Message[];
-  task_description?: string;
-  task_id?: string;
-  temperature?: number;
-}
-
-export interface CreateMessageOption {
+export interface HistoryItem {
   /**
-   * The model to use for task analysis
+   * Index of the todo that was executed
    */
-  model: string;
+  todo_index: number;
   /**
-   * Screenshot image bytes (mutually exclusive with screenshot_url)
+   * Description of the todo
    */
-  screenshot?: ArrayBuffer;
+  todo_description: string;
   /**
-   * Direct URL to screenshot (mutually exclusive with screenshot)
+   * Number of actions taken
    */
-  screenshotUrl?: string;
+  action_count: number;
   /**
-   * Description of the task (required for new sessions)
+   * Execution summary
    */
-  taskDescription?: string;
+  summary?: string;
   /**
-   * Task ID for continuing existing task
+   * Whether the todo was completed
    */
-  taskId?: string;
-  /**
-   * Additional instruction when continuing a session
-   */
-  instruction?: string;
-  /**
-   * OpenAI-compatible chat message history
-   */
-  messagesHistory?: Message[];
-  /**
-   * Sampling temperature (0.0-2.0) for LLM inference
-   */
-  temperature?: number;
-  /**
-   * API version header
-   */
-  apiVersion?: string;
-}
-
-export interface PrepareMessagePayloadOption {
-  /**
-   * Model to use
-   */
-  model: string;
-  /**
-   * Response from S3 upload (if screenshot was uploaded)
-   */
-  uploadFileResponse?: UploadFileResponse;
-  /**
-   * Task description
-   */
-  taskDescription?: string;
-  /**
-   * Task ID
-   */
-  taskId?: string;
-  /**
-   * Optional instruction
-   */
-  instruction?: string;
-  /**
-   * Message history
-   */
-  messagesHistory?: Message[];
-  /**
-   * Sampling temperature
-   */
-  temperature?: number;
-  /**
-   * API version
-   */
-  apiVersion?: string;
-  /**
-   * Direct screenshot URL (alternative to upload_file_response)
-   */
-  screenshotUrl?: string;
+  completed: boolean;
 }
 
 export interface GenerateOption {
@@ -130,11 +72,11 @@ export interface GenerateOption {
   /**
    * List of todo dicts with index, description, status, execution_summary
    */
-  todos: {}[];
+  todos: Todo[];
   /**
    * List of history dicts with todo_index, todo_description, action_count, summary, completed
    */
-  history?: {}[];
+  history?: HistoryItem[];
   /**
    * Index of current todo being executed
    */
@@ -154,7 +96,7 @@ export interface GenerateOption {
   /**
    * Action steps list (oagi_follow)
    */
-  windowSteps?: {}[];
+  windowSteps?: Step[];
   /**
    * Uploaded file UUIDs list (oagi_follow)
    */
@@ -194,34 +136,6 @@ export const ErrorResponseSchema = z.object({
  */
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 
-export const HealthCheckResponseSchema = z.object({
-  status: z.string(),
-});
-export type HealthCheckResponse = z.infer<typeof HealthCheckResponseSchema>;
-
-export const UsageSchema = z.object({
-  prompt_tokens: z.int(),
-  completion_tokens: z.int(),
-  total_tokens: z.int(),
-});
-export type Usage = z.infer<typeof UsageSchema>;
-
-export const LLMResponseSchema = z.object({
-  id: z.string(),
-  task_id: z.string(),
-  object: z.string().default('task.completion'),
-  created: z.int(),
-  model: z.string(),
-  task_description: z.string(),
-  is_complete: z.boolean(),
-  actions: z.array(ActionSchema),
-  reason: z.string().nullish(),
-  usage: UsageSchema,
-  error: ErrorDetailSchema.nullish(),
-  raw_output: z.string().nullish(),
-});
-export type LLMResponse = z.infer<typeof LLMResponseSchema>;
-
 export const UploadFileResponseSchema = z.object({
   url: z.string(),
   uuid: z.string(),
@@ -242,6 +156,7 @@ export const GenerateResponseSchema = z.object({
    * @deprecated This field is deprecated
    */
   cost: z.float64().nullish(),
+  request_id: z.string().nullish(),
 });
 /**
  * Response from /v1/generate endpoint.

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      openai:
+        specifier: ^6.10.0
+        version: 6.10.0(zod@4.1.13)
       pino:
         specifier: ^10.1.0
         version: 10.1.0
@@ -37,6 +40,18 @@ packages:
   on-exit-leak-free@2.1.2:
     resolution: {integrity: sha512-0eJJY6hXLGf1udHwfNftBqH+g73EU4B504nZeKpz1sYRKafAghwxEJunB2O7rDZkL4PGfsMVnTXZ2EjibbqcsA==}
     engines: {node: '>=14.0.0'}
+
+  openai@6.10.0:
+    resolution: {integrity: sha512-ITxOGo7rO3XRMiKA5l7tQ43iNNu+iXGFAcf2t+aWVzzqRaS0i7m1K2BhxNdaveB+5eENhO0VY1FkiZzhBk4v3A==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
 
   pino-abstract-transport@2.0.0:
     resolution: {integrity: sha512-F63x5tizV6WCh4R6RHyi2Ml+M70DNRXt/+HANowMflpgGFMAym/VKm6G7ZOQRjqN7XbGxK1Lg9t6ZrtzOaivMw==}
@@ -94,6 +109,10 @@ snapshots:
   atomic-sleep@1.0.0: {}
 
   on-exit-leak-free@2.1.2: {}
+
+  openai@6.10.0(zod@4.1.13):
+    optionalDependencies:
+      zod: 4.1.13
 
   pino-abstract-transport@2.0.0:
     dependencies:
