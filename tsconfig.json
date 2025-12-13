@@ -4,7 +4,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strict": true,
-    "allowImportingTsExtensions": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,

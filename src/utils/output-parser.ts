@@ -17,17 +17,17 @@ import type { Action, Step } from '../types';
  * Note: This parser does NOT handle '&' inside quoted strings.
  * E.g., type("a&b") would incorrectly split. The LLM should avoid
  * this pattern by using alternative escape sequences.
- * 
+ *
  * @param actionBlock String containing one or more actions separated by &
  * @returns List of individual action strings
  */
 const splitActions = (actionBlock: string): string[] => {
-  const actions: string[] = []
+  const actions: string[] = [];
   let currentAction: string[] = [];
   let parenLevel = 0;
 
   for (const char of actionBlock) {
-    currentAction.push(char)
+    currentAction.push(char);
     switch (char) {
       case '(':
         parenLevel++;
@@ -63,7 +63,7 @@ const splitActions = (actionBlock: string): string[] => {
  * - scroll(x, y, direction, c) # scroll at position
  * - wait() # wait for a while
  * - finish() # indicate task is finished
- * 
+ *
  * @param action String representation of a single action
  * @returns Action object or None if parsing fails
  */
@@ -97,7 +97,7 @@ const parseAction = (action: string): Action | null => {
       }
       break;
     default:
-      // For other actions, use default count of 1
+    // For other actions, use default count of 1
   }
   if (!Number.isInteger(count) || count <= 0) {
     count = 1;
@@ -111,16 +111,22 @@ const parseAction = (action: string): Action | null => {
  * Expected format:
  * <|think_start|> reasoning text <|think_end|>
  * <|action_start|> action1(args) & action2(args) & ... <|action_end|>
- * 
+ *
  * @param rawOutput Raw text output from the LLM
  * @returns Step object with parsed reasoning and actions
  */
 export const parseRawOutput = (rawOutput: string): Step => {
-  const reason = /<\|think_start\|>(.*?)<\|think_end\|>/s.exec(rawOutput)?.[1] ?? '';
-  const action = /<\|action_start\|>(.*?)<\|action_end\|>/s.exec(rawOutput)?.[1] ?? '';
+  const reason =
+    /<\|think_start\|>(.*?)<\|think_end\|>/s.exec(rawOutput)?.[1] ?? '';
+  const action =
+    /<\|action_start\|>(.*?)<\|action_end\|>/s.exec(rawOutput)?.[1] ?? '';
 
   const actions = splitActions(action)
     .map(parseAction)
     .filter((action): action is Action => !!action);
-  return { reason, actions, stop: actions.some(action => action.type === 'finish') };
+  return {
+    reason,
+    actions,
+    stop: actions.some(action => action.type === 'finish'),
+  };
 };

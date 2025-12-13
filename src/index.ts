@@ -8,16 +8,23 @@
  * -----------------------------------------------------------------------------
  */
 
-export { default } from './client.js';
-
-export { default as Client } from './client.js';
 export { default as Actor } from './actor.js';
-
-export * from './actor/index.js';
-export * from './agent/index.js';
-
-export * from './consts.js';
-export * from './errors.js';
-export { default as getLogger, logTraceOnFailure } from './logger.js';
-export * from './types/index.js';
-export * from './utils/index.js';
+export { default as Client } from './client.js';
+export {
+  APIError,
+  AuthenticationError,
+  ConfigurationError,
+  NetworkError,
+  NotFoundError,
+  OAGIError,
+  RateLimitError,
+  ServerError,
+  RequestTimeoutError,
+  ValidationError,
+} from './errors.js';
+export type {
+  GenerateResponse,
+  UploadFileResponse,
+  ErrorDetail,
+  ErrorResponse,
+} from './types';

@@ -1,0 +1,87 @@
+name: Bug report
+description: Report a problem installing or using the OpenAGI (oagi) TypeScript SDK.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-checks
+      options:
+        - label: I have searched existing issues.
+          required: true
+        - label: I am using Node.js v22 or newer (per docs).
+          required: true
+        - label: I included the full error output/logs.
+          required: false
+  - type: input
+    id: version
+    attributes:
+      label: oagi package version
+      description: Output of `npm ls | grep oagi`.
+      placeholder: e.g. 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: JavaScript runtime
+      options:
+        - Node.js
+        - Deno
+        - Bun
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+  - type: dropdown
+    id: installer
+    attributes:
+      label: How did you install? (docs recommend `pnpm install oagi`)
+      options:
+        - npm
+        - yarn
+        - pnpm
+        - jsr
+        - bun
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include exact commands and any virtual env/tooling used.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and logs
+      description: Paste full traceback/build logs if applicable.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Environment details, proxies, system architecture, etc.

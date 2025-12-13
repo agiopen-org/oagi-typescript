@@ -34,7 +34,10 @@ import {
   GenerateResponseSchema,
   UploadFileResponseSchema,
 } from './types/index.js';
-import type { ChatCompletionMessageParam, CompletionUsage } from 'openai/resources.js';
+import type {
+  ChatCompletionMessageParam,
+  CompletionUsage,
+} from 'openai/resources.js';
 import type {
   ErrorResponse,
   GenerateOption,
@@ -134,7 +137,7 @@ export default class Client {
 
   /**
    * Call OpenAI-compatible /v1/chat/completions endpoint.
-   * 
+   *
    * @param model Model to use for inference
    * @param messages Full message history (OpenAI-compatible format)
    * @param temperature Sampling temperature (0.0-2.0)
@@ -164,8 +167,12 @@ export default class Client {
     // @ts-expect-error Extract task_id from response (custom field from OAGI API)
     taskId = response.task_id;
     const task = taskId ? `task_id: ${taskId}, ` : '';
-    const usage = response.usage ? `, tokens: ${response.usage.prompt_tokens}+${response.usage.completion_tokens}` : '';
-    logger.info(`Chat completion successful - ${task}actions: ${step.actions.length}, stop: ${step.stop}${usage}`);
+    const usage = response.usage
+      ? `, tokens: ${response.usage.prompt_tokens}+${response.usage.completion_tokens}`
+      : '';
+    logger.info(
+      `Chat completion successful - ${task}actions: ${step.actions.length}, stop: ${step.stop}${usage}`,
+    );
 
     return [step, rawOutput, response.usage];
   }

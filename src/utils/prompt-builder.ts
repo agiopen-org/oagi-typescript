@@ -10,11 +10,13 @@
 
 /**
  * Build the instruction prompt for the OAGI model.
- * 
+ *
  * @param taskDescription The task description to include in the prompt
  * @returns The formatted prompt string with action format documentation
  */
-export const buildPrompt = (taskDescription: string) => `You are a Desktop Agent completing computer use tasks from a user instruction.
+export const buildPrompt = (
+  taskDescription: string,
+) => `You are a Desktop Agent completing computer use tasks from a user instruction.
 
 Every step, you will look at the screenshot and output the desired actions in a format as:
 

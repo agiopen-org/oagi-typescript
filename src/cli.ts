@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * -----------------------------------------------------------------------------
  *  Copyright (c) OpenAGI Foundation
@@ -8,7 +9,4 @@
  * -----------------------------------------------------------------------------
  */
 
-export { AsyncActor, AsyncTask } from './async_.js';
-export { AsyncShortTask } from './async_short.js';
-export { Actor, Task } from './sync.js';
-export { ShortTask } from './short.js';
+process.exit(0);
