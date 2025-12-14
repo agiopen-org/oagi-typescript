@@ -8,7 +8,12 @@
  * -----------------------------------------------------------------------------
  */
 
-import type { LogEvent, ObserverEvent, SplitEvent } from '../../types/index.js';
+import {
+  StepObserver,
+  type LogEvent,
+  type ObserverEvent,
+  type SplitEvent,
+} from '../../types/index.js';
 import { exportToHtml, exportToJson, exportToMarkdown } from './exporters';
 
 export enum ExportFormat {
@@ -18,7 +23,7 @@ export enum ExportFormat {
   JSON = 'json',
 }
 
-export class AsyncAgentObserver {
+export class AsyncAgentObserver extends StepObserver {
   /**
    * Records agent execution events and exports to various formats.
    *
@@ -29,7 +34,7 @@ export class AsyncAgentObserver {
 
   events: ObserverEvent[] = [];
 
-  async on_event(event: ObserverEvent): Promise<void> {
+  async onEvent(event: ObserverEvent): Promise<void> {
     /**
      * Record an event.
      *
@@ -38,7 +43,7 @@ export class AsyncAgentObserver {
     this.events.push(event);
   }
 
-  add_log(message: string): void {
+  addLog(message: string): void {
     /**
      * Add a custom log message.
      *
@@ -52,7 +57,7 @@ export class AsyncAgentObserver {
     this.events.push(event);
   }
 
-  add_split(label: string = ''): void {
+  addSplit(label: string = ''): void {
     /**
      * Add a visual separator.
      *
@@ -71,18 +76,24 @@ export class AsyncAgentObserver {
     this.events = [];
   }
 
-  get_events_by_step(step_num: number): ObserverEvent[] {
+  getEventsByStep(step_num: number): ObserverEvent[] {
     /**
      * Get all events for a specific step.
      *
      * @param step_num The step number to filter by.
      */
     return this.events.filter(
-      (event) => (event as any).step_num !== undefined && (event as any).step_num === step_num,
+      event =>
+        (event as any).step_num !== undefined &&
+        (event as any).step_num === step_num,
     );
   }
 
-  export(format: ExportFormat | string, path: string, images_dir?: string | null): void {
+  export(
+    format: ExportFormat | string,
+    path: string,
+    images_dir?: string | null,
+  ): void {
     /**
      * Export recorded events to a file.
      *

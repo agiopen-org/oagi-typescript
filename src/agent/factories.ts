@@ -18,71 +18,57 @@ import {
   MODEL_ACTOR,
   MODEL_THINKER,
 } from '../consts.js';
-import type { AsyncStepObserver } from '../types/index.js';
+import type { AsyncObserver } from '../types/index.js';
 
 import { AsyncDefaultAgent } from './default.js';
 import type { AsyncAgent } from './protocol.js';
-import { asyncAgentRegister } from './registry.js';
+import { asyncAgentRegister, type AgentCreateOptions } from './registry.js';
 
-asyncAgentRegister('actor')((kwargs: Record<string, unknown> = {}): AsyncAgent => {
+asyncAgentRegister('actor')((options: AgentCreateOptions = {}): AsyncAgent => {
   const {
-    api_key,
-    base_url,
+    apiKey,
+    baseUrl,
     model = MODEL_ACTOR,
-    max_steps = DEFAULT_MAX_STEPS,
+    maxSteps = DEFAULT_MAX_STEPS,
     temperature = DEFAULT_TEMPERATURE_LOW,
-    step_observer,
-    step_delay = DEFAULT_STEP_DELAY,
-  } = kwargs as {
-    api_key?: string;
-    base_url?: string;
-    model?: string;
-    max_steps?: number;
-    temperature?: number;
-    step_observer?: AsyncStepObserver;
-    step_delay?: number;
-  };
+    stepObserver,
+    stepDelay = DEFAULT_STEP_DELAY,
+  } = options;
 
   return new AsyncDefaultAgent(
-    api_key,
-    base_url,
+    apiKey,
+    baseUrl,
     model,
-    max_steps,
+    maxSteps,
     temperature,
-    step_observer,
-    step_delay,
+    (stepObserver ?? undefined) as AsyncObserver | undefined,
+    stepDelay,
   );
 });
 
-asyncAgentRegister('thinker')((kwargs: Record<string, unknown> = {}): AsyncAgent => {
-  const {
-    api_key,
-    base_url,
-    model = MODEL_THINKER,
-    max_steps = DEFAULT_MAX_STEPS_THINKER,
-    temperature = DEFAULT_TEMPERATURE_LOW,
-    step_observer,
-    step_delay = DEFAULT_STEP_DELAY,
-  } = kwargs as {
-    api_key?: string;
-    base_url?: string;
-    model?: string;
-    max_steps?: number;
-    temperature?: number;
-    step_observer?: AsyncStepObserver;
-    step_delay?: number;
-  };
+asyncAgentRegister('thinker')(
+  (options: AgentCreateOptions = {}): AsyncAgent => {
+    const {
+      apiKey,
+      baseUrl,
+      model = MODEL_THINKER,
+      maxSteps = DEFAULT_MAX_STEPS_THINKER,
+      temperature = DEFAULT_TEMPERATURE_LOW,
+      stepObserver,
+      stepDelay = DEFAULT_STEP_DELAY,
+    } = options;
 
-  return new AsyncDefaultAgent(
-    api_key,
-    base_url,
-    model,
-    max_steps,
-    temperature,
-    step_observer,
-    step_delay,
-  );
-});
+    return new AsyncDefaultAgent(
+      apiKey,
+      baseUrl,
+      model,
+      maxSteps,
+      temperature,
+      (stepObserver ?? undefined) as AsyncObserver | undefined,
+      stepDelay,
+    );
+  },
+);
 
 // NOTE: TaskerAgent factories are defined in the python SDK.
 // They will be ported to TypeScript in `src/agent/tasker`.

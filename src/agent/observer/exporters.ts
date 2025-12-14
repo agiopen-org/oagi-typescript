@@ -8,8 +8,9 @@
  * -----------------------------------------------------------------------------
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import type {
   Action,
@@ -22,7 +23,11 @@ import type {
   SplitEvent,
   StepEvent,
 } from '../../types/index.js';
-import { parseCoords, parseDragCoords, parseScroll } from '../../types/models/action.js';
+import {
+  parseCoords,
+  parseDragCoords,
+  parseScroll,
+} from '../../types/models/action.js';
 
 const ensureDir = (dirPath: string) => {
   fs.mkdirSync(dirPath, { recursive: true });
@@ -54,7 +59,13 @@ const parseActionCoords = (action: Action): ParsedActionCoords | null => {
     case 'drag': {
       const coords = parseDragCoords(arg);
       if (coords) {
-        return { type: 'drag', x1: coords[0], y1: coords[1], x2: coords[2], y2: coords[3] };
+        return {
+          type: 'drag',
+          x1: coords[0],
+          y1: coords[1],
+          x2: coords[2],
+          y2: coords[3],
+        };
       }
       return null;
     }
@@ -62,7 +73,12 @@ const parseActionCoords = (action: Action): ParsedActionCoords | null => {
     case 'scroll': {
       const result = parseScroll(arg);
       if (result) {
-        return { type: 'scroll', x: result[0], y: result[1], direction: result[2] };
+        return {
+          type: 'scroll',
+          x: result[0],
+          y: result[1],
+          direction: result[2],
+        };
       }
       return null;
     }
@@ -90,7 +106,10 @@ export const exportToMarkdown = (
   const lines: string[] = ['# Agent Execution Report\n'];
 
   for (const event of events) {
-    const d = event.timestamp instanceof Date ? event.timestamp : new Date(event.timestamp);
+    const d =
+      event.timestamp instanceof Date
+        ? event.timestamp
+        : new Date(event.timestamp);
     const timestamp = d.toTimeString().slice(0, 8);
 
     switch (event.type) {
@@ -110,7 +129,9 @@ export const exportToMarkdown = (
             const relPath = path.join(path.basename(imagesDir), imageFilename);
             lines.push(`\n![Step ${e.step_num}](${relPath})\n`);
           } else {
-            lines.push(`\n*[Screenshot captured - ${e.image.byteLength} bytes]*\n`);
+            lines.push(
+              `\n*[Screenshot captured - ${e.image.byteLength} bytes]*\n`,
+            );
           }
         } else {
           lines.push(`\n**Screenshot URL:** ${e.image}\n`);
@@ -123,7 +144,8 @@ export const exportToMarkdown = (
         if (e.step.actions?.length) {
           lines.push('\n**Planned Actions:**\n');
           for (const action of e.step.actions) {
-            const countStr = action.count && action.count > 1 ? ` (x${action.count})` : '';
+            const countStr =
+              action.count && action.count > 1 ? ` (x${action.count})` : '';
             lines.push(`- \`${action.type}\`: ${action.argument}${countStr}\n`);
           }
         }
@@ -187,10 +209,15 @@ export const exportToMarkdown = (
               const imageFilename = `plan_${e.phase}_${Date.now()}.png`;
               const imagePath = path.join(imagesDir, imageFilename);
               fs.writeFileSync(imagePath, Buffer.from(e.image));
-              const relPath = path.join(path.basename(imagesDir), imageFilename);
+              const relPath = path.join(
+                path.basename(imagesDir),
+                imageFilename,
+              );
               lines.push(`\n![${phaseTitle}](${relPath})\n`);
             } else {
-              lines.push(`\n*[Screenshot captured - ${e.image.byteLength} bytes]*\n`);
+              lines.push(
+                `\n*[Screenshot captured - ${e.image.byteLength} bytes]*\n`,
+              );
             }
           } else {
             lines.push(`\n**Screenshot URL:** ${e.image}\n`);
@@ -252,14 +279,22 @@ type HtmlPlanEvent = {
   request_id?: string | null;
 };
 
-type HtmlEvent = HtmlStepEvent | HtmlActionEvent | HtmlLogEvent | HtmlSplitEvent | HtmlPlanEvent;
+type HtmlEvent =
+  | HtmlStepEvent
+  | HtmlActionEvent
+  | HtmlLogEvent
+  | HtmlSplitEvent
+  | HtmlPlanEvent;
 
 const convertEventsForHtml = (events: ObserverEvent[]): HtmlEvent[] => {
   /** Convert events to JSON-serializable format for HTML template. */
   const result: HtmlEvent[] = [];
 
   for (const event of events) {
-    const d = event.timestamp instanceof Date ? event.timestamp : new Date(event.timestamp);
+    const d =
+      event.timestamp instanceof Date
+        ? event.timestamp
+        : new Date(event.timestamp);
     const timestamp = d.toTimeString().slice(0, 8);
 
     switch (event.type) {
@@ -306,7 +341,11 @@ const convertEventsForHtml = (events: ObserverEvent[]): HtmlEvent[] => {
 
       case 'action': {
         const e = event as ActionEvent;
-        result.push({ event_type: 'action', timestamp, error: e.error ?? null });
+        result.push({
+          event_type: 'action',
+          timestamp,
+          error: e.error ?? null,
+        });
         break;
       }
 
@@ -364,7 +403,11 @@ export const exportToHtml = (events: ObserverEvent[], filePath: string) => {
   const outputDir = path.dirname(filePath);
   ensureDir(outputDir);
 
-  const templatePath = path.join(path.dirname(new URL(import.meta.url).pathname), 'report_template.html');
+  const moduleUrl = (import.meta as any)?.url
+    ? (import.meta as any).url
+    : pathToFileURL(__filename).href;
+  const moduleDir = path.dirname(fileURLToPath(moduleUrl));
+  const templatePath = path.join(moduleDir, 'report_template.html');
   const template = fs.readFileSync(templatePath, 'utf-8');
 
   const eventsData = convertEventsForHtml(events);
@@ -381,19 +424,25 @@ export const exportToJson = (events: ObserverEvent[], filePath: string) => {
   const outputDir = path.dirname(filePath);
   ensureDir(outputDir);
 
-  const jsonEvents = events.map((event) => {
+  const jsonEvents = events.map(event => {
     // Handle ArrayBuffer images before JSON to avoid binary output
     if (
-      (event.type === 'step' || event.type === 'image' || event.type === 'plan') &&
+      (event.type === 'step' ||
+        event.type === 'image' ||
+        event.type === 'plan') &&
       (event as any).image &&
       typeof (event as any).image !== 'string'
     ) {
       const base: any = {
         ...event,
         timestamp:
-          event.timestamp instanceof Date ? event.timestamp.toISOString() : new Date(event.timestamp).toISOString(),
+          event.timestamp instanceof Date
+            ? event.timestamp.toISOString()
+            : new Date(event.timestamp).toISOString(),
       };
-      base.image = Buffer.from((event as any).image as ArrayBuffer).toString('base64');
+      base.image = Buffer.from((event as any).image as ArrayBuffer).toString(
+        'base64',
+      );
       base.image_encoding = 'base64';
       return base;
     }
@@ -401,7 +450,9 @@ export const exportToJson = (events: ObserverEvent[], filePath: string) => {
     return {
       ...event,
       timestamp:
-        event.timestamp instanceof Date ? event.timestamp.toISOString() : new Date(event.timestamp).toISOString(),
+        event.timestamp instanceof Date
+          ? event.timestamp.toISOString()
+          : new Date(event.timestamp).toISOString(),
     };
   });
 

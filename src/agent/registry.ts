@@ -8,10 +8,21 @@
  * -----------------------------------------------------------------------------
  */
 
-import type { AsyncAgent } from './protocol.js';
+import { StepObserver } from '../types/index.js';
+import { Agent } from './index.js';
+
+export type AgentCreateOptions = {
+  apiKey?: string;
+  baseUrl?: string;
+  model?: string;
+  maxSteps?: number;
+  temperature?: number;
+  stepObserver?: StepObserver | null;
+  stepDelay?: number;
+};
 
 // Type alias for agent factory functions
-export type AgentFactory = (kwargs?: Record<string, unknown>) => AsyncAgent;
+export type AgentFactory = (options?: AgentCreateOptions) => Agent;
 
 // Global registry mapping mode names to factory functions
 const agentRegistry: Record<string, AgentFactory> = {};
@@ -47,7 +58,9 @@ export const getAgentFactory = (mode: string): AgentFactory => {
    */
   if (!(mode in agentRegistry)) {
     const availableModes = Object.keys(agentRegistry);
-    throw new Error(`Unknown agent mode: '${mode}'. Available modes: ${availableModes}`);
+    throw new Error(
+      `Unknown agent mode: '${mode}'. Available modes: ${availableModes}`,
+    );
   }
   return agentRegistry[mode]!;
 };
@@ -59,18 +72,20 @@ export const listAgentModes = (): string[] => {
   return Object.keys(agentRegistry);
 };
 
-export const createAgent = (mode: string, kwargs: Record<string, unknown> = {}): AsyncAgent => {
+export const createAgent = (
+  mode: string,
+  options: AgentCreateOptions = {},
+): Agent => {
   /**
    * Create an agent instance using the registered factory for the given mode.
    */
   const factory = getAgentFactory(mode);
 
-  // In TypeScript, factories are expected to ignore unknown keys in kwargs.
-  const agent = factory(kwargs);
+  const agent = factory(options);
 
   if (!agent || typeof (agent as any).execute !== 'function') {
     throw new TypeError(
-      `Factory for mode '${mode}' returned an object that doesn't implement AsyncAgent protocol. Expected an object with an 'execute' method.`,
+      `Factory for mode '${mode}' returned an object that doesn't implement Agent. Expected an object with an 'execute' method.`,
     );
   }
 

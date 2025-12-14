@@ -8,7 +8,7 @@
  * -----------------------------------------------------------------------------
  */
 
-import { AsyncActor } from '../actor/async_.js';
+import Actor from '../actor.js';
 import {
   DEFAULT_MAX_STEPS,
   DEFAULT_STEP_DELAY,
@@ -18,17 +18,16 @@ import {
 import getLogger from '../logger.js';
 import type {
   ActionEvent,
-  AsyncActionHandler,
-  AsyncImageProvider,
-  AsyncObserver,
-  Image,
+  ActionHandler,
+  ImageProvider,
   StepEvent,
-  URL,
+  StepObserver,
 } from '../types/index.js';
+import { Agent } from './index.js';
 
 const logger = getLogger('agent.default');
 
-type ResettableHandler = AsyncActionHandler & { reset?: () => void };
+type ResettableHandler = ActionHandler & { reset?: () => void };
 
 const resetHandler = (handler: ResettableHandler) => {
   if (typeof handler.reset === 'function') {
@@ -37,16 +36,9 @@ const resetHandler = (handler: ResettableHandler) => {
 };
 
 const sleep = (seconds: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, seconds * 1000));
+  new Promise<void>(resolve => setTimeout(resolve, seconds * 1000));
 
-const serializeImage = (image: Image | URL): ArrayBuffer | string => {
-  if (typeof image === 'string') {
-    return image;
-  }
-  return image.read();
-};
-
-export class AsyncDefaultAgent {
+export class DefaultAgent implements Agent {
   /** Default asynchronous agent implementation using OAGI client. */
 
   private api_key?: string;
@@ -54,7 +46,7 @@ export class AsyncDefaultAgent {
   private model: string;
   private max_steps: number;
   private temperature?: number;
-  private step_observer?: AsyncObserver;
+  private step_observer?: StepObserver;
   private step_delay: number;
 
   constructor(
@@ -63,7 +55,7 @@ export class AsyncDefaultAgent {
     model: string = MODEL_ACTOR,
     max_steps: number = DEFAULT_MAX_STEPS,
     temperature: number | undefined = DEFAULT_TEMPERATURE,
-    step_observer?: AsyncObserver,
+    step_observer?: StepObserver,
     step_delay: number = DEFAULT_STEP_DELAY,
   ) {
     this.api_key = api_key;
@@ -77,93 +69,90 @@ export class AsyncDefaultAgent {
 
   async execute(
     instruction: string,
-    action_handler: AsyncActionHandler,
-    image_provider: AsyncImageProvider,
+    action_handler: ActionHandler,
+    image_provider: ImageProvider,
   ): Promise<boolean> {
-    const actor = new AsyncActor(this.api_key, this.base_url, this.model);
+    const actor = new Actor(this.api_key, this.base_url, this.model);
 
-    try {
-      logger.info(`Starting async task execution: ${instruction}`);
-      await actor.initTask(instruction, this.max_steps);
+    logger.info(`Starting async task execution: ${instruction}`);
+    await actor.initTask(instruction, this.max_steps);
 
-      // Reset handler state at automation start
-      resetHandler(action_handler as ResettableHandler);
+    // Reset handler state at automation start
+    resetHandler(action_handler as ResettableHandler);
 
-      for (let i = 0; i < this.max_steps; i++) {
-        const step_num = i + 1;
-        logger.debug(`Executing step ${step_num}/${this.max_steps}`);
+    for (let i = 0; i < this.max_steps; i++) {
+      const step_num = i + 1;
+      logger.debug(`Executing step ${step_num}/${this.max_steps}`);
 
-        // Capture current state
-        const image = await image_provider();
+      // Capture current state
+      const image = await image_provider.provide();
 
-        // Get next step from OAGI
-        const step = await actor.step(image as any, undefined, this.temperature);
+      // Get next step from OAGI
+      const step = await actor.step(image as any, undefined, this.temperature);
 
-        // Log reasoning
-        if (step.reason) {
-          logger.info(`Step ${step_num}: ${step.reason}`);
+      // Log reasoning
+      if (step.reason) {
+        logger.info(`Step ${step_num}: ${step.reason}`);
+      }
+
+      // Emit step event
+      if (this.step_observer) {
+        const event: StepEvent = {
+          type: 'step',
+          timestamp: new Date(),
+          step_num,
+          image: image,
+          step,
+          task_id: (actor as any).taskId,
+        };
+        await this.step_observer.onEvent(event);
+      }
+
+      // Execute actions if any
+      if (step.actions?.length) {
+        logger.info(`Actions (${step.actions.length}):`);
+        for (const action of step.actions) {
+          const count_suffix =
+            action.count && action.count > 1 ? ` x${action.count}` : '';
+          logger.info(`  [${action.type}] ${action.argument}${count_suffix}`);
         }
 
-        // Emit step event
-        if (this.step_observer) {
-          const event: StepEvent = {
-            type: 'step',
-            timestamp: new Date(),
-            step_num,
-            image: serializeImage(image),
-            step,
-            task_id: (actor as any).taskId,
-          };
-          await this.step_observer.on_event(event);
-        }
-
-        // Execute actions if any
-        if (step.actions?.length) {
-          logger.info(`Actions (${step.actions.length}):`);
-          for (const action of step.actions) {
-            const count_suffix = action.count && action.count > 1 ? ` x${action.count}` : '';
-            logger.info(`  [${action.type}] ${action.argument}${count_suffix}`);
+        let error: string | null = null;
+        try {
+          await action_handler.handle(step.actions);
+        } catch (e) {
+          error = String(e);
+          throw e;
+        } finally {
+          // Emit action event
+          if (this.step_observer) {
+            const event: ActionEvent = {
+              type: 'action',
+              timestamp: new Date(),
+              step_num,
+              actions: step.actions,
+              error: error ?? undefined,
+            };
+            await this.step_observer.onEvent(event);
           }
-
-          let error: string | null = null;
-          try {
-            await action_handler(step.actions);
-          } catch (e) {
-            error = String(e);
-            throw e;
-          } finally {
-            // Emit action event
-            if (this.step_observer) {
-              const event: ActionEvent = {
-                type: 'action',
-                timestamp: new Date(),
-                step_num,
-                actions: step.actions,
-                error,
-              };
-              await this.step_observer.on_event(event);
-            }
-          }
-        }
-
-        // Wait after actions before next screenshot
-        if (this.step_delay > 0) {
-          await sleep(this.step_delay);
-        }
-
-        // Check if task is complete
-        if (step.stop) {
-          logger.info(`Task completed successfully after ${step_num} steps`);
-          return true;
         }
       }
 
-      logger.warn(
-        `Task reached max steps (${this.max_steps}) without completion`,
-      );
-      return false;
-    } finally {
-      await actor.close();
+      // Wait after actions before next screenshot
+      if (this.step_delay > 0) {
+        await sleep(this.step_delay);
+      }
+
+      // Check if task is complete
+      if (step.stop) {
+        logger.info(`Task completed successfully after ${step_num} steps`);
+        return true;
+      }
     }
+
+    logger.warn(
+      `Task reached max steps (${this.max_steps}) without completion`,
+    );
+    return false;
   }
 }

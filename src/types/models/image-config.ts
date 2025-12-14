@@ -7,9 +7,11 @@ export const ImageConfigSchema = z
     width: z.int().positive().nullish().default(1260),
     height: z.int().positive().nullish().default(700),
     optimize: z.boolean().default(false),
-    resample: z.enum(['NEAREST', 'BILINEAR', 'BICUBIC', 'LANCZOS']).default('LANCZOS'),
+    resample: z
+      .enum(['NEAREST', 'BILINEAR', 'BICUBIC', 'LANCZOS'])
+      .default('LANCZOS'),
   })
-  .transform((value) => {
+  .transform(value => {
     if (value.format === 'PNG') {
       return { ...value, quality: 85 };
     }

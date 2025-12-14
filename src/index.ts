@@ -9,6 +9,7 @@
  */
 
 export { default as Actor } from './actor.js';
+export { AsyncActor } from './actor/async_.js';
 export { default as Client } from './client.js';
 export {
   APIError,
@@ -28,3 +29,5 @@ export type {
   ErrorDetail,
   ErrorResponse,
 } from './types';
+
+export * from './handler/index.js';

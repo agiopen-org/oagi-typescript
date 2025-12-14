@@ -46,7 +46,7 @@ const resetHandler = (handler: ResettableHandler) => {
 };
 
 const sleep = (seconds: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, seconds * 1000));
+  new Promise<void>(resolve => setTimeout(resolve, seconds * 1000));
 
 const serializeImage = (image: Image | URL): ArrayBuffer | string => {
   if (typeof image === 'string') {
@@ -131,7 +131,12 @@ export class TaskeeAgent implements AsyncAgent {
     this.success = false;
 
     try {
-      this.actor = new AsyncActor(this.api_key, this.base_url, this.model, this.temperature);
+      this.actor = new AsyncActor(
+        this.api_key,
+        this.base_url,
+        this.model,
+        this.temperature,
+      );
 
       // Initial planning
       await this.initial_plan(image_provider);
@@ -173,7 +178,9 @@ export class TaskeeAgent implements AsyncAgent {
     }
   }
 
-  private async initial_plan(image_provider: AsyncImageProvider): Promise<void> {
+  private async initial_plan(
+    image_provider: AsyncImageProvider,
+  ): Promise<void> {
     /**
      * Generate initial plan for the todo.
      */
@@ -190,7 +197,12 @@ export class TaskeeAgent implements AsyncAgent {
       this.todo_index ?? undefined,
     );
 
-    this.record_action('plan', 'initial', plan_output.reasoning, plan_output.instruction);
+    this.record_action(
+      'plan',
+      'initial',
+      plan_output.reasoning,
+      plan_output.instruction,
+    );
 
     if (this.step_observer) {
       const event: PlanEvent = {
@@ -255,10 +267,20 @@ export class TaskeeAgent implements AsyncAgent {
       // Get next step from OAGI using URL (avoids re-upload)
       let step;
       try {
-        step = await this.actor.step(screenshot_url as URL, undefined, this.temperature);
+        step = await this.actor.step(
+          screenshot_url as URL,
+          undefined,
+          this.temperature,
+        );
       } catch (e) {
         logger.error(`Error getting step from OAGI: ${e}`);
-        this.record_action('error', 'oagi_step', String(e), undefined, screenshot_uuid);
+        this.record_action(
+          'error',
+          'oagi_step',
+          String(e),
+          undefined,
+          screenshot_uuid,
+        );
         break;
       }
 
@@ -281,7 +303,8 @@ export class TaskeeAgent implements AsyncAgent {
       if (step.actions?.length) {
         logger.info(`Actions (${step.actions.length}):`);
         for (const action of step.actions) {
-          const count_suffix = action.count && action.count > 1 ? ` x${action.count}` : '';
+          const count_suffix =
+            action.count && action.count > 1 ? ` x${action.count}` : '';
           logger.info(`  [${action.type}] ${action.argument}${count_suffix}`);
         }
 
@@ -338,7 +361,9 @@ export class TaskeeAgent implements AsyncAgent {
     return steps_taken;
   }
 
-  private async reflect_and_decide(image_provider: AsyncImageProvider): Promise<boolean> {
+  private async reflect_and_decide(
+    image_provider: AsyncImageProvider,
+  ): Promise<boolean> {
     /**
      * Reflect on progress and decide whether to continue.
      */
@@ -349,7 +374,9 @@ export class TaskeeAgent implements AsyncAgent {
     const context = this.get_context();
     (context as any).current_todo = this.current_todo;
 
-    const recent_actions = this.actions.slice(Math.max(0, this.actions.length - this.since_reflection));
+    const recent_actions = this.actions.slice(
+      Math.max(0, this.actions.length - this.since_reflection),
+    );
 
     const [reflection, request_id] = await this.planner.reflect(
       recent_actions,

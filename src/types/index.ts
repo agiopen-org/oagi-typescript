@@ -8,11 +8,15 @@
  * -----------------------------------------------------------------------------
  */
 
+import { Action } from './models/action.js';
+
 export * from './models/index.js';
-export * from './url.js';
-export * from './image.js';
-export * from './action-handler.js';
-export * from './async-action-handler.js';
-export * from './image-provider.js';
-export * from './async-image-provider.js';
-export * from './step-observer.js';
+export * from './step_observer.js';
+
+export interface ActionHandler {
+  handle(actions: Action[]): Promise<void>;
+}
+
+export interface ImageProvider {
+  provide(): Promise<Buffer>;
+}

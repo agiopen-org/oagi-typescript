@@ -9,10 +9,10 @@
  */
 
 // Import factories to trigger registration
+import { ActionHandler, ImageProvider } from '../types/index.js';
 import './factories.js';
 
-export { AsyncDefaultAgent } from './default.js';
-export type { Agent, AsyncAgent } from './protocol.js';
+export { DefaultAgent } from './default.js';
 
 export {
   asyncAgentRegister,
@@ -23,3 +23,14 @@ export {
 
 export * from './tasker/index.js';
 export * from './observer/index.js';
+
+export interface Agent {
+  /**
+   * Protocol for synchronous task execution agents.
+   */
+  execute(
+    instruction: string,
+    action_handler: ActionHandler,
+    image_provider: ImageProvider,
+  ): Promise<boolean>;
+}

@@ -62,12 +62,18 @@ export class PlannerMemory {
     return [null, -1];
   }
 
-  update_todo(index: number, status: TodoStatus | string, summary?: string | null): void {
+  update_todo(
+    index: number,
+    status: TodoStatus | string,
+    summary?: string | null,
+  ): void {
     /**
      * Update a todo's status and optionally its summary.
      */
     if (index >= 0 && index < this.todos.length) {
-      const normalized = (typeof status === 'string' ? status : status) as TodoStatus;
+      const normalized = (
+        typeof status === 'string' ? status : status
+      ) as TodoStatus;
       this.todos[index]!.status = normalized;
       if (summary) {
         this.todo_execution_summaries[index] = summary;
@@ -106,7 +112,7 @@ export class PlannerMemory {
         description: t.description,
         status: t.status,
       })),
-      history: this.history.map((h) => ({
+      history: this.history.map(h => ({
         todo_index: h.todo_index,
         todo: h.todo,
         action_count: h.actions.length,

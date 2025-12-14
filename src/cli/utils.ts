@@ -8,9 +8,13 @@
  * -----------------------------------------------------------------------------
  */
 
-import { main } from './cli/main.js';
+export const setupLogging = (verbose: boolean): void => {
+  if (verbose) {
+    process.env.OAGI_LOG = 'debug';
+  }
+};
 
-main().catch(err => {
-  process.stderr.write(`Unexpected error: ${String(err)}\n`);
-  process.exitCode = 1;
-});
+export const maskApiKey = (value: string): string => {
+  if (!value) return '';
+  return value.length > 8 ? `${value.slice(0, 8)}...` : '***';
+};

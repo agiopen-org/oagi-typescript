@@ -128,7 +128,11 @@ export class TaskerAgent implements AsyncAgent {
         await this.step_observer.on_event(event);
       }
 
-      const success = await this.execute_todo(todo_index, action_handler, image_provider);
+      const success = await this.execute_todo(
+        todo_index,
+        action_handler,
+        image_provider,
+      );
 
       if (this.step_observer) {
         const event: SplitEvent = {
@@ -154,7 +158,9 @@ export class TaskerAgent implements AsyncAgent {
     }
 
     const status_summary = this.memory.get_todo_status_summary();
-    logger.info(`Workflow complete. Status summary: ${JSON.stringify(status_summary)}`);
+    logger.info(
+      `Workflow complete. Status summary: ${JSON.stringify(status_summary)}`,
+    );
 
     return overall_success;
   }
@@ -232,7 +238,11 @@ export class TaskerAgent implements AsyncAgent {
     }
   }
 
-  private update_memory_from_execution(todo_index: number, results: any, success: boolean): void {
+  private update_memory_from_execution(
+    todo_index: number,
+    results: any,
+    success: boolean,
+  ): void {
     /**
      * Update memory based on execution results.
      */
@@ -240,7 +250,12 @@ export class TaskerAgent implements AsyncAgent {
 
     this.memory.update_todo(todo_index, status, results.summary);
 
-    this.memory.add_history(todo_index, results.actions, results.summary, success);
+    this.memory.add_history(
+      todo_index,
+      results.actions,
+      results.summary,
+      success,
+    );
 
     if (success) {
       if (this.memory.task_execution_summary) {
@@ -261,11 +276,17 @@ export class TaskerAgent implements AsyncAgent {
     const completed = status_summary.completed ?? 0;
     const total = this.memory.todos.length;
 
-    const summary_parts: string[] = [`Progress: ${completed}/${total} todos completed`];
+    const summary_parts: string[] = [
+      `Progress: ${completed}/${total} todos completed`,
+    ];
 
-    for (const history of this.memory.history.slice(Math.max(0, this.memory.history.length - 3))) {
+    for (const history of this.memory.history.slice(
+      Math.max(0, this.memory.history.length - 3),
+    )) {
       if (history.completed && history.summary) {
-        summary_parts.push(`- Todo ${history.todo_index}: ${history.summary.slice(0, 100)}`);
+        summary_parts.push(
+          `- Todo ${history.todo_index}: ${history.summary.slice(0, 100)}`,
+        );
       }
     }
 

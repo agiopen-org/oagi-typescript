@@ -10,11 +10,20 @@
 
 import Client from '../../client.js';
 import { DEFAULT_REFLECTION_INTERVAL } from '../../consts.js';
-import type { URL, Image, GenerateResponse, GenerateOption } from '../../types/index.js';
+import type {
+  URL,
+  Image,
+  GenerateResponse,
+  GenerateOption,
+} from '../../types/index.js';
 import { extractUuidFromUrl } from '../../types/url.js';
 
 import type { PlannerMemory } from './memory.js';
-import type { TaskerAction, PlannerOutput, ReflectionOutput } from './models.js';
+import type {
+  TaskerAction,
+  PlannerOutput,
+  ReflectionOutput,
+} from './models.js';
 
 export class Planner {
   /**
@@ -75,7 +84,7 @@ export class Planner {
         status: t.status,
         execution_summary: memory.todo_execution_summaries[i],
       }));
-      const history = memory.history.map((h) => ({
+      const history = memory.history.map(h => ({
         todo_index: h.todo_index,
         todo_description: h.todo,
         action_count: h.actions.length,
@@ -83,8 +92,16 @@ export class Planner {
         completed: h.completed,
       }));
       const task_execution_summary = memory.task_execution_summary || null;
-      const overall_todo = memory.todos.length ? memory.todos[todo_index]?.description ?? '' : '';
-      return [task_description, todos, history, task_execution_summary, overall_todo];
+      const overall_todo = memory.todos.length
+        ? (memory.todos[todo_index]?.description ?? '')
+        : '';
+      return [
+        task_description,
+        todos,
+        history,
+        task_execution_summary,
+        overall_todo,
+      ];
     }
 
     const task_description = context.task_description ?? '';
@@ -92,7 +109,13 @@ export class Planner {
     const history = context.history ?? [];
     const task_execution_summary = null;
     const overall_todo = context.current_todo ?? '';
-    return [task_description, todos, history, task_execution_summary, overall_todo];
+    return [
+      task_description,
+      todos,
+      history,
+      task_execution_summary,
+      overall_todo,
+    ];
   }
 
   async initial_plan(
@@ -114,17 +137,16 @@ export class Planner {
       }
       if (!screenshot_uuid) {
         const upload = await client.putS3PresignedUrl(
-          typeof (screenshot as any).read === 'function' ? (screenshot as Image).read() : (screenshot as any),
+          typeof (screenshot as any).read === 'function'
+            ? (screenshot as Image).read()
+            : (screenshot as any),
         );
         screenshot_uuid = upload.uuid;
       }
     }
 
-    const [task_description, todos, history, task_execution_summary] = this.extract_memory_data(
-      memory,
-      context,
-      todo_index,
-    );
+    const [task_description, todos, history, task_execution_summary] =
+      this.extract_memory_data(memory, context, todo_index);
 
     const response = await client.callWorker({
       workerId: 'oagi_first',
@@ -137,7 +159,10 @@ export class Planner {
       currentScreenshot: screenshot_uuid ?? undefined,
     } as GenerateOption);
 
-    return [this.parse_planner_output(response.response), response.request_id ?? null];
+    return [
+      this.parse_planner_output(response.response),
+      response.request_id ?? null,
+    ];
   }
 
   async reflect(
@@ -161,16 +186,25 @@ export class Planner {
       }
       if (!result_screenshot_uuid) {
         const upload = await client.putS3PresignedUrl(
-          typeof (screenshot as any).read === 'function' ? (screenshot as Image).read() : (screenshot as any),
+          typeof (screenshot as any).read === 'function'
+            ? (screenshot as Image).read()
+            : (screenshot as any),
         );
         result_screenshot_uuid = upload.uuid;
       }
     }
 
-    const [task_description, todos, history, task_execution_summary, overall_todo] =
-      this.extract_memory_data(memory, context, todo_index);
+    const [
+      task_description,
+      todos,
+      history,
+      task_execution_summary,
+      overall_todo,
+    ] = this.extract_memory_data(memory, context, todo_index);
 
-    const window_actions = actions.slice(Math.max(0, actions.length - reflection_interval));
+    const window_actions = actions.slice(
+      Math.max(0, actions.length - reflection_interval),
+    );
 
     const window_steps = window_actions.map((action, i) => ({
       step_number: i + 1,
@@ -180,7 +214,7 @@ export class Planner {
     }));
 
     const window_screenshots = window_actions
-      .map((a) => a.screenshot_uuid)
+      .map(a => a.screenshot_uuid)
       .filter((x): x is string => Boolean(x));
 
     const prior_notes = this.format_execution_notes(context);
@@ -200,7 +234,10 @@ export class Planner {
       priorNotes: prior_notes,
     } as GenerateOption);
 
-    return [this.parse_reflection_output(response.response), response.request_id ?? null];
+    return [
+      this.parse_reflection_output(response.response),
+      response.request_id ?? null,
+    ];
   }
 
   async summarize(
@@ -214,12 +251,17 @@ export class Planner {
      */
     const client = this.ensure_client();
 
-    const [task_description, todos, history, task_execution_summary, overall_todo] =
-      this.extract_memory_data(memory, context, todo_index);
+    const [
+      task_description,
+      todos,
+      history,
+      task_execution_summary,
+      overall_todo,
+    ] = this.extract_memory_data(memory, context, todo_index);
 
     const latest_todo_summary =
       memory && todo_index !== undefined && todo_index !== null
-        ? memory.todo_execution_summaries[todo_index] ?? ''
+        ? (memory.todo_execution_summaries[todo_index] ?? '')
         : '';
 
     const response: GenerateResponse = await client.callWorker({
@@ -306,7 +348,8 @@ export class Planner {
       return {
         continue_current: true,
         new_instruction: null,
-        reasoning: 'Failed to parse reflection response, continuing current approach',
+        reasoning:
+          'Failed to parse reflection response, continuing current approach',
         success_assessment: false,
       };
     }
