@@ -21,7 +21,6 @@ export {
   listAgentModes,
 } from './registry.js';
 
-export * from './tasker/index.js';
 export * from './observer/index.js';
 
 export interface Agent {

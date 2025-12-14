@@ -18,13 +18,13 @@ import {
   MODEL_ACTOR,
   MODEL_THINKER,
 } from '../consts.js';
-import type { AsyncObserver } from '../types/index.js';
+import type { StepObserver } from '../types/index.js';
 
-import { AsyncDefaultAgent } from './default.js';
-import type { AsyncAgent } from './protocol.js';
+import { DefaultAgent } from './default.js';
+import { Agent } from './index.js';
 import { asyncAgentRegister, type AgentCreateOptions } from './registry.js';
 
-asyncAgentRegister('actor')((options: AgentCreateOptions = {}): AsyncAgent => {
+asyncAgentRegister('actor')((options: AgentCreateOptions = {}): Agent => {
   const {
     apiKey,
     baseUrl,
@@ -35,40 +35,38 @@ asyncAgentRegister('actor')((options: AgentCreateOptions = {}): AsyncAgent => {
     stepDelay = DEFAULT_STEP_DELAY,
   } = options;
 
-  return new AsyncDefaultAgent(
+  return new DefaultAgent(
     apiKey,
     baseUrl,
     model,
     maxSteps,
     temperature,
-    (stepObserver ?? undefined) as AsyncObserver | undefined,
+    stepObserver ?? undefined,
     stepDelay,
   );
 });
 
-asyncAgentRegister('thinker')(
-  (options: AgentCreateOptions = {}): AsyncAgent => {
-    const {
-      apiKey,
-      baseUrl,
-      model = MODEL_THINKER,
-      maxSteps = DEFAULT_MAX_STEPS_THINKER,
-      temperature = DEFAULT_TEMPERATURE_LOW,
-      stepObserver,
-      stepDelay = DEFAULT_STEP_DELAY,
-    } = options;
+asyncAgentRegister('thinker')((options: AgentCreateOptions = {}): Agent => {
+  const {
+    apiKey,
+    baseUrl,
+    model = MODEL_THINKER,
+    maxSteps = DEFAULT_MAX_STEPS_THINKER,
+    temperature = DEFAULT_TEMPERATURE_LOW,
+    stepObserver,
+    stepDelay = DEFAULT_STEP_DELAY,
+  } = options;
 
-    return new AsyncDefaultAgent(
-      apiKey,
-      baseUrl,
-      model,
-      maxSteps,
-      temperature,
-      (stepObserver ?? undefined) as AsyncObserver | undefined,
-      stepDelay,
-    );
-  },
-);
+  return new DefaultAgent(
+    apiKey,
+    baseUrl,
+    model,
+    maxSteps,
+    temperature,
+    (stepObserver ?? undefined) as StepObserver | undefined,
+    stepDelay,
+  );
+});
 
 // NOTE: TaskerAgent factories are defined in the python SDK.
 // They will be ported to TypeScript in `src/agent/tasker`.
