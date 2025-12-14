@@ -10,7 +10,8 @@
   },
   "scripts": {
     "build": "tsup",
-    "prepare": "husky"
+    "prepare": "husky",
+    "start": "node dist/cli.js"
   },
   "exports": {
     ".": {
@@ -27,10 +28,10 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
+    "@hurdlegroup/node-mac-permissions": "^2.6.1",
     "cli-table3": "^0.6.5",
     "commander": "^14.0.0",
     "jpeg-js": "^0.4.4",
-    "node-mac-permissions": "^2.5.0",
     "openai": "^6.10.0",
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.3",

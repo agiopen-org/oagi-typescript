@@ -22,11 +22,7 @@ import {
 import getLogger from '../logger.js';
 import { displayStepTable } from './display.js';
 import { StepTracker } from './tracking.js';
-import {
-  askForAccessibilityAccess,
-  askForScreenCaptureAccess,
-  getAuthStatus,
-} from 'node-mac-permissions';
+import macPerm from '@hurdlegroup/node-mac-permissions';
 import { AgentCreateOptions } from '../agent/registry.js';
 
 const logger = getLogger('cli.agent');
@@ -52,8 +48,8 @@ const checkPermissions = async (): Promise<void> => {
     return;
   }
 
-  const screenPermission = getAuthStatus('screen');
-  const accessibilityPermission = getAuthStatus('accessibility');
+  const screenPermission = macPerm.getAuthStatus('screen');
+  const accessibilityPermission = macPerm.getAuthStatus('accessibility');
 
   console.log('Checking permissions...');
   console.log(`  ${screenPermission ? '[OK]' : '[MISSING]'} Screen Recording`);
@@ -62,10 +58,10 @@ const checkPermissions = async (): Promise<void> => {
   );
 
   if (!screenPermission) {
-    askForScreenCaptureAccess(true);
+    macPerm.askForScreenCaptureAccess(true);
   }
   if (!accessibilityPermission) {
-    askForAccessibilityAccess();
+    macPerm.askForAccessibilityAccess();
   }
 
   if (screenPermission && accessibilityPermission) {

@@ -44,8 +44,8 @@ const normalizeKey = (
 ): string => {
   const key = raw.trim().toLowerCase();
   if (key === 'caps_lock' || key === 'caps') return 'capslock';
-  if (key === 'page_up' || key === 'pageup') return 'pgup';
-  if (key === 'page_down' || key === 'pagedown') return 'pgdn';
+  if (key === 'page_up' || key === 'pageup') return 'pageup';
+  if (key === 'page_down' || key === 'pagedown') return 'pagedown';
   if (key === 'cmd') return 'command';
   if (opts.macosCtrlToCmd && process.platform === 'darwin' && key === 'ctrl') {
     return 'command';
@@ -254,7 +254,7 @@ export class DefaultActionHandler implements ActionHandler {
           'alt' | 'command' | 'control' | 'shift'
         >;
 
-        robot.keyTap(last, modifiers.length ? modifiers : undefined);
+        robot.keyTap(last, modifiers.length ? modifiers : []);
         await sleep(this.#cfg.hotkeyDelayMs);
         return;
       }
