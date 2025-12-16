@@ -10,7 +10,6 @@
 
 export type {
   ActionEvent,
-  AsyncObserver,
   BaseEvent,
   ImageEvent,
   LogEvent,
@@ -21,4 +20,4 @@ export type {
 } from '../../types/index.js';
 
 export { AsyncAgentObserver, ExportFormat } from './agent_observer.js';
-export { exportToHtml, exportToJson, exportToMarkdown } from './exporters';
+export { exportToHtml, exportToJson, exportToMarkdown } from './exporters.js';

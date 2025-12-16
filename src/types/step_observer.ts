@@ -29,7 +29,7 @@ export type ImageEvent = z.infer<typeof ImageEventSchema>;
 export const StepEventSchema = BaseEventSchema.extend({
   type: z.literal('step'),
   step_num: z.number(),
-  image: z.custom<Buffer>(),
+  image: z.custom<ArrayBuffer>(),
   step: z.custom<Step>(),
   task_id: z.string().optional(),
 });
@@ -62,7 +62,7 @@ export type SplitEvent = z.infer<typeof SplitEventSchema>;
 export const PlanEventSchema = BaseEventSchema.extend({
   type: z.literal('plan'),
   phase: z.enum(['initial', 'reflection', 'summary']),
-  image: z.string().optional(),
+  image: z.string().or(z.custom<ArrayBuffer>()).optional(),
   reasoning: z.string(),
   result: z.string().optional(),
   request_id: z.string().optional(),

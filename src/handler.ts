@@ -97,35 +97,49 @@ const defaultDesktopAutomationConfig =
 
 export class ScreenshotMaker implements ImageProvider {
   #cfg: ImageConfig;
-  #last: Buffer | null = null;
 
-  constructor(cfg: Partial<ImageConfig>) {
+  constructor(cfg?: Partial<ImageConfig>) {
     const defaultConfig = ImageConfigSchema.parse({});
     this.#cfg = { ...defaultConfig, ...cfg };
   }
 
-  async provide(): Promise<Buffer> {
-    return this.capture();
+  static toArrayBuffer(buffer: Buffer) {
+    const arraybuffer = new ArrayBuffer(buffer.length);
+    const view = new Uint8Array(arraybuffer);
+    for (let i = 0; i < buffer.length; ++i) {
+      view[i] = buffer[i];
+    }
+    return arraybuffer;
   }
 
-  async capture(): Promise<Buffer> {
+  async provide() {
     const { width, height } = robot.getScreenSize();
     const screenshot = robot.screen.capture(0, 0, width, height);
 
-    const bytesPerPixel: number = screenshot.bytesPerPixel ?? 4;
-    const src: Buffer = screenshot.image;
-    const rgba = Buffer.alloc(width * height * 4);
-    for (let i = 0, o = 0; i < src.length; i += bytesPerPixel, o += 4) {
-      rgba[o] = src[i + 2] ?? 0;
-      rgba[o + 1] = src[i + 1] ?? 0;
-      rgba[o + 2] = src[i] ?? 0;
-      rgba[o + 3] = 255;
+    const channels = 3;
+    const data = new Uint8Array(
+      screenshot.width * screenshot.height * channels,
+    );
+    for (let w = 0; w < screenshot.width; ++w) {
+      for (let h = 0; h < screenshot.height; ++h) {
+        let offset = (h * screenshot.width + w) * channels;
+        let offset2 = screenshot.byteWidth * h + w * screenshot.bytesPerPixel;
+        data[offset] = screenshot.image.readUInt8(offset2 + 2);
+        data[offset + 1] = screenshot.image.readUInt8(offset2 + 1);
+        data[offset + 2] = screenshot.image.readUInt8(offset2 + 0);
+      }
     }
-
-    let p = sharp(rgba, { raw: { width, height, channels: 4 } });
+    let p = sharp(Buffer.from(data), {
+      raw: {
+        width: screenshot.width,
+        height: screenshot.height,
+        channels,
+      },
+    });
 
     if (this.#cfg.width || this.#cfg.height) {
       p = p.resize(this.#cfg.width ?? width, this.#cfg.height ?? height, {
+        fit: 'fill',
         kernel: toSharpKernel(this.#cfg.resample),
       });
     }
@@ -136,12 +150,7 @@ export class ScreenshotMaker implements ImageProvider {
             .png({ compressionLevel: this.#cfg.optimize ? 9 : 6 })
             .toBuffer()
         : await p.jpeg({ quality: this.#cfg.quality }).toBuffer();
-    this.#last = encoded;
-    return this.#last!;
-  }
-
-  lastImage(): Buffer | null {
-    return this.#last;
+    return ScreenshotMaker.toArrayBuffer(encoded);
   }
 }
 

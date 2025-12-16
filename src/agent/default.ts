@@ -78,7 +78,7 @@ export class DefaultAgent implements Agent {
     await actor.initTask(instruction, this.max_steps);
 
     // Reset handler state at automation start
-    resetHandler(action_handler as ResettableHandler);
+    resetHandler(action_handler);
 
     for (let i = 0; i < this.max_steps; i++) {
       const step_num = i + 1;
@@ -88,7 +88,7 @@ export class DefaultAgent implements Agent {
       const image = await image_provider.provide();
 
       // Get next step from OAGI
-      const step = await actor.step(image as any, undefined, this.temperature);
+      const step = await actor.step(image, undefined, this.temperature);
 
       // Log reasoning
       if (step.reason) {
@@ -101,7 +101,7 @@ export class DefaultAgent implements Agent {
           type: 'step',
           timestamp: new Date(),
           step_num,
-          image: image,
+          image,
           step,
           task_id: (actor as any).taskId,
         };

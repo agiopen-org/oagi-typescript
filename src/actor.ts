@@ -120,10 +120,7 @@ export default class Actor {
    * @param taskDescription Task description
    * @param maxSteps Maximum number of steps allowed
    */
-  async initTask(
-    taskDescription: string,
-    maxSteps: number = DEFAULT_MAX_STEPS,
-  ) {
+  initTask(taskDescription: string, maxSteps: number = DEFAULT_MAX_STEPS) {
     this.taskId = randomUUID();
     this.taskDescription = taskDescription;
     this.messageHistory = [];

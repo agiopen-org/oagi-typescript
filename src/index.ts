@@ -9,6 +9,7 @@
  */
 
 export { default as Actor } from './actor.js';
+export { DefaultAgent } from './agent/index.js';
 export { default as Client } from './client.js';
 export {
   APIError,
@@ -22,6 +23,9 @@ export {
   RequestTimeoutError,
   ValidationError,
 } from './errors.js';
+export { DefaultActionHandler, ScreenshotMaker } from './handler.js';
+
+export type { Agent } from './agent';
 export type {
   GenerateResponse,
   UploadFileResponse,

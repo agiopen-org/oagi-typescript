@@ -18,5 +18,5 @@ export interface ActionHandler {
 }
 
 export interface ImageProvider {
-  provide(): Promise<Buffer>;
+  provide(): Promise<ArrayBuffer>;
 }

@@ -12,17 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import type {
-  Action,
-  ActionEvent,
-  ActionType,
-  ImageEvent,
-  LogEvent,
-  ObserverEvent,
-  PlanEvent,
-  SplitEvent,
-  StepEvent,
-} from '../../types/index.js';
+import type { Action, ActionType, ObserverEvent } from '../../types/index.js';
 import {
   parseCoords,
   parseDragCoords,
@@ -113,102 +103,90 @@ export const exportToMarkdown = (
     const timestamp = d.toTimeString().slice(0, 8);
 
     switch (event.type) {
-      case 'step': {
-        const e = event as StepEvent;
-        lines.push(`\n## Step ${e.step_num}\n`);
+      case 'step':
+        lines.push(`\n## Step ${event.step_num}\n`);
         lines.push(`**Time:** ${timestamp}\n`);
-        if (e.task_id) {
-          lines.push(`**Task ID:** \`${e.task_id}\`\n`);
+        if (event.task_id) {
+          lines.push(`**Task ID:** \`${event.task_id}\`\n`);
         }
 
-        if (typeof e.image !== 'string') {
+        if (typeof event.image !== 'string') {
           if (imagesDir) {
-            const imageFilename = `step_${e.step_num}.png`;
+            const imageFilename = `step_${event.step_num}.png`;
             const imagePath = path.join(imagesDir, imageFilename);
-            fs.writeFileSync(imagePath, Buffer.from(e.image));
+            fs.writeFileSync(imagePath, Buffer.from(event.image));
             const relPath = path.join(path.basename(imagesDir), imageFilename);
-            lines.push(`\n![Step ${e.step_num}](${relPath})\n`);
+            lines.push(`\n![Step ${event.step_num}](${relPath})\n`);
           } else {
             lines.push(
-              `\n*[Screenshot captured - ${e.image.byteLength} bytes]*\n`,
+              `\n*[Screenshot captured - ${event.image.byteLength} bytes]*\n`,
             );
           }
         } else {
-          lines.push(`\n**Screenshot URL:** ${e.image}\n`);
+          lines.push(`\n**Screenshot URL:** ${event.image}\n`);
         }
 
-        if (e.step.reason) {
-          lines.push(`\n**Reasoning:**\n> ${e.step.reason}\n`);
+        if (event.step.reason) {
+          lines.push(`\n**Reasoning:**\n> ${event.step.reason}\n`);
         }
 
-        if (e.step.actions?.length) {
+        if (event.step.actions?.length) {
           lines.push('\n**Planned Actions:**\n');
-          for (const action of e.step.actions) {
+          for (const action of event.step.actions) {
             const countStr =
               action.count && action.count > 1 ? ` (x${action.count})` : '';
             lines.push(`- \`${action.type}\`: ${action.argument}${countStr}\n`);
           }
         }
 
-        if (e.step.stop) {
+        if (event.step.stop) {
           lines.push('\n**Status:** Task Complete\n');
         }
         break;
-      }
 
-      case 'action': {
-        const e = event as ActionEvent;
+      case 'action':
         lines.push(`\n### Actions Executed (${timestamp})\n`);
-        if (e.error) {
-          lines.push(`\n**Error:** ${e.error}\n`);
+        if (event.error) {
+          lines.push(`\n**Error:** ${event.error}\n`);
         } else {
           lines.push('\n**Result:** Success\n');
         }
         break;
-      }
 
-      case 'log': {
-        const e = event as LogEvent;
-        lines.push(`\n> **Log (${timestamp}):** ${e.message}\n`);
+      case 'log':
+        lines.push(`\n> **Log (${timestamp}):** ${event.message}\n`);
         break;
-      }
 
-      case 'split': {
-        const e = event as SplitEvent;
-        if (e.label) {
-          lines.push(`\n---\n\n### ${e.label}\n`);
+      case 'split':
+        if (event.label) {
+          lines.push(`\n---\n\n### ${event.label}\n`);
         } else {
           lines.push('\n---\n');
         }
         break;
-      }
 
-      case 'image': {
-        const _e = event as ImageEvent;
-        void _e;
+      case 'image':
         break;
-      }
 
       case 'plan': {
-        const e = event as PlanEvent;
         const phaseTitles: Record<string, string> = {
           initial: 'Initial Planning',
           reflection: 'Reflection',
           summary: 'Summary',
         };
-        const phaseTitle = phaseTitles[e.phase] ?? e.phase;
+        const phaseTitle = phaseTitles[event.phase] ?? event.phase;
 
         lines.push(`\n### ${phaseTitle} (${timestamp})\n`);
-        if (e.request_id) {
-          lines.push(`**Request ID:** \`${e.request_id}\`\n`);
+        if (event.request_id) {
+          lines.push(`**Request ID:** \`${event.request_id}\`\n`);
         }
 
-        if (e.image) {
-          if (typeof e.image !== 'string') {
+        if (event.image) {
+          if (typeof event.image !== 'string') {
             if (imagesDir) {
-              const imageFilename = `plan_${e.phase}_${Date.now()}.png`;
+              const imageFilename = `plan_${event.phase}_${Date.now()}.png`;
               const imagePath = path.join(imagesDir, imageFilename);
-              fs.writeFileSync(imagePath, Buffer.from(e.image));
+              fs.writeFileSync(imagePath, Buffer.from(event.image));
               const relPath = path.join(
                 path.basename(imagesDir),
                 imageFilename,
@@ -216,20 +194,20 @@ export const exportToMarkdown = (
               lines.push(`\n![${phaseTitle}](${relPath})\n`);
             } else {
               lines.push(
-                `\n*[Screenshot captured - ${e.image.byteLength} bytes]*\n`,
+                `\n*[Screenshot captured - ${event.image.byteLength} bytes]*\n`,
               );
             }
           } else {
-            lines.push(`\n**Screenshot URL:** ${e.image}\n`);
+            lines.push(`\n**Screenshot URL:** ${event.image}\n`);
           }
         }
 
-        if (e.reasoning) {
-          lines.push(`\n**Reasoning:**\n> ${e.reasoning}\n`);
+        if (event.reasoning) {
+          lines.push(`\n**Reasoning:**\n> ${event.reasoning}\n`);
         }
 
-        if (e.result) {
-          lines.push(`\n**Result:** ${e.result}\n`);
+        if (event.result) {
+          lines.push(`\n**Result:** ${event.result}\n`);
         }
         break;
       }
@@ -299,13 +277,11 @@ const convertEventsForHtml = (events: ObserverEvent[]): HtmlEvent[] => {
 
     switch (event.type) {
       case 'step': {
-        const e = event as StepEvent;
-
         const action_coords: ParsedActionCoords[] = [];
         const actions: { type: string; argument: string; count: number }[] = [];
 
-        if (e.step.actions?.length) {
-          for (const action of e.step.actions) {
+        if (event.step.actions?.length) {
+          for (const action of event.step.actions) {
             const coords = parseActionCoords(action);
             if (coords) {
               action_coords.push(coords);
@@ -319,74 +295,63 @@ const convertEventsForHtml = (events: ObserverEvent[]): HtmlEvent[] => {
         }
 
         let image: string | null = null;
-        if (typeof e.image !== 'string') {
-          image = Buffer.from(e.image).toString('base64');
+        if (typeof event.image !== 'string') {
+          image = Buffer.from(event.image).toString('base64');
         } else {
-          image = e.image;
+          image = event.image;
         }
 
         result.push({
           event_type: 'step',
           timestamp,
-          step_num: e.step_num,
+          step_num: event.step_num,
           image,
           action_coords,
-          reason: e.step.reason,
+          reason: event.step.reason,
           actions,
-          stop: e.step.stop,
-          task_id: e.task_id,
+          stop: event.step.stop,
+          task_id: event.task_id,
         });
         break;
       }
 
-      case 'action': {
-        const e = event as ActionEvent;
+      case 'action':
         result.push({
           event_type: 'action',
           timestamp,
-          error: e.error ?? null,
+          error: event.error ?? null,
         });
         break;
-      }
 
-      case 'log': {
-        const e = event as LogEvent;
-        result.push({ event_type: 'log', timestamp, message: e.message });
+      case 'log':
+        result.push({ event_type: 'log', timestamp, message: event.message });
         break;
-      }
 
-      case 'split': {
-        const e = event as SplitEvent;
-        result.push({ event_type: 'split', timestamp, label: e.label });
+      case 'split':
+        result.push({ event_type: 'split', timestamp, label: event.label! });
         break;
-      }
 
-      case 'image': {
-        const _e = event as ImageEvent;
-        void _e;
+      case 'image':
         break;
-      }
 
       case 'plan': {
-        const e = event as PlanEvent;
-
         let image: string | null = null;
-        if (e.image) {
-          if (typeof e.image !== 'string') {
-            image = Buffer.from(e.image).toString('base64');
+        if (event.image) {
+          if (typeof event.image !== 'string') {
+            image = Buffer.from(event.image).toString('base64');
           } else {
-            image = e.image;
+            image = event.image;
           }
         }
 
         result.push({
           event_type: 'plan',
           timestamp,
-          phase: e.phase,
+          phase: event.phase,
           image,
-          reasoning: e.reasoning,
-          result: e.result ?? null,
-          request_id: e.request_id ?? null,
+          reasoning: event.reasoning,
+          result: event.result ?? null,
+          request_id: event.request_id ?? null,
         });
         break;
       }
@@ -425,34 +390,23 @@ export const exportToJson = (events: ObserverEvent[], filePath: string) => {
   ensureDir(outputDir);
 
   const jsonEvents = events.map(event => {
+    const timestamp =
+      event.timestamp instanceof Date
+        ? event.timestamp.toISOString()
+        : new Date(event.timestamp).toISOString();
     // Handle ArrayBuffer images before JSON to avoid binary output
-    if (
-      (event.type === 'step' ||
-        event.type === 'image' ||
-        event.type === 'plan') &&
-      (event as any).image &&
-      typeof (event as any).image !== 'string'
-    ) {
-      const base: any = {
+    if ('image' in event && event.image instanceof ArrayBuffer) {
+      return {
         ...event,
-        timestamp:
-          event.timestamp instanceof Date
-            ? event.timestamp.toISOString()
-            : new Date(event.timestamp).toISOString(),
+        timestamp,
+        image: Buffer.from(event.image).toString('base64'),
+        image_encoding: 'base64',
       };
-      base.image = Buffer.from((event as any).image as ArrayBuffer).toString(
-        'base64',
-      );
-      base.image_encoding = 'base64';
-      return base;
     }
 
     return {
       ...event,
-      timestamp:
-        event.timestamp instanceof Date
-          ? event.timestamp.toISOString()
-          : new Date(event.timestamp).toISOString(),
+      timestamp,
     };
   });
 

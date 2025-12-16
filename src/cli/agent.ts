@@ -19,6 +19,7 @@ import {
   MODE_ACTOR,
   MODEL_THINKER,
 } from '../consts.js';
+import { DefaultActionHandler, ScreenshotMaker } from '../handler.js';
 import getLogger from '../logger.js';
 import { displayStepTable } from './display.js';
 import { StepTracker } from './tracking.js';
@@ -26,16 +27,6 @@ import macPerm from '@hurdlegroup/node-mac-permissions';
 import { AgentCreateOptions } from '../agent/registry.js';
 
 const logger = getLogger('cli.agent');
-
-const openUrl = async (url: string): Promise<void> => {
-  try {
-    const { spawn } = await import('child_process');
-    const p = spawn('open', [url], { stdio: 'ignore', detached: true });
-    p.unref();
-  } catch {
-    // ignore
-  }
-};
 
 const checkPermissions = async (): Promise<void> => {
   if (process.platform !== 'darwin') {
@@ -136,12 +127,11 @@ const runAgent = async (
 
   const agent = createAgent(mode, createOpts);
 
-  let actionHandler: any;
-  let imageProvider: any;
+  let actionHandler: DefaultActionHandler;
+  let imageProvider: ScreenshotMaker;
   try {
-    const handlers = await import('../handler.js');
-    actionHandler = new handlers.DefaultActionHandler();
-    imageProvider = new handlers.ScreenshotMaker({});
+    actionHandler = new DefaultActionHandler();
+    imageProvider = new ScreenshotMaker();
   } catch (e) {
     process.stderr.write(
       `Error: desktop automation dependencies failed to load: ${String(e)}\n` +
