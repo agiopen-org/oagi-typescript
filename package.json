@@ -1,6 +1,6 @@
 {
   "name": "oagi",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Official API of OpenAGI Foundation",
   "license": "MIT",
   "homepage": "https://agiopen.org/",
@@ -8,6 +8,9 @@
     "type": "git",
     "url": "https://github.com/agiopen-org/oagi-typescript"
   },
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
     "build": "tsup",
     "prepare": "husky",
