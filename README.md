@@ -43,15 +43,15 @@ With Lux, possibilities are endless. Here are a few examples:
 
 ```bash
 # If you are using Node.js
-npm install oagi
-yarn add oagi
-pnpm add oagi
+npm install @oagi/oagi
+yarn add @oagi/oagi
+pnpm add @oagi/oagi
 
 # If you are using Deno
-deno add npm:oagi
+deno add npm:@oagi/oagi
 
 # If you are using Bun
-bun install oagi
+bun install @oagi/oagi
 ```
 
 ## Quick Start
@@ -67,7 +67,7 @@ export OAGI_API_KEY="your-api-key" # get your API key from https://developer.agi
 Run tasks automatically with screenshot capture and action execution:
 
 ```typescript
-import { DefaultActionHandler, DefaultAgent, ScreenshotMaker } from 'oagi';
+import { DefaultActionHandler, DefaultAgent, ScreenshotMaker } from '@oagi/oagi';
 
 const agent = new DefaultAgent();
 await agent.execute(
@@ -128,7 +128,7 @@ const compressed = await sharp('large_screenshot.png')
 For step-by-step control over task execution:
 
 ```typescript
-import { Actor, DefaultActionHandler, ScreenshotMaker } from 'oagi';
+import { Actor, DefaultActionHandler, ScreenshotMaker } from '@oagi/oagi';
 
 const actor = new Actor();
 actor.initTask('Complete the form');

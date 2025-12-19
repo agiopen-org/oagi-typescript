@@ -1,5 +1,5 @@
 {
-  "name": "oagi",
+  "name": "@oagi/oagi",
   "version": "0.1.3",
   "description": "Official API of OpenAGI Foundation",
   "license": "MIT",
