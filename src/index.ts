@@ -26,9 +26,12 @@ export {
 export { DefaultActionHandler, ScreenshotMaker } from './handler.js';
 
 export type { Agent } from './agent';
+export type { ClientOptions } from './client';
 export type {
-  GenerateResponse,
-  UploadFileResponse,
+  Action,
   ErrorDetail,
   ErrorResponse,
+  GenerateResponse,
+  Step,
+  UploadFileResponse,
 } from './types';

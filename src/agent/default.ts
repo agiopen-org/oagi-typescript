@@ -23,7 +23,7 @@ import type {
   StepEvent,
   StepObserver,
 } from '../types/index.js';
-import { Agent } from './index.js';
+import type { Agent } from './index.js';
 
 const logger = getLogger('agent.default');
 
@@ -75,7 +75,7 @@ export class DefaultAgent implements Agent {
     const actor = new Actor(this.api_key, this.base_url, this.model);
 
     logger.info(`Starting async task execution: ${instruction}`);
-    await actor.initTask(instruction, this.max_steps);
+    actor.initTask(instruction, this.max_steps);
 
     // Reset handler state at automation start
     resetHandler(action_handler);

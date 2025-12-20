@@ -94,7 +94,7 @@ const runAgent = async (
     return;
   }
 
-  const baseUrl =
+  const baseURL =
     opts.oagiBaseUrl ?? process.env.OAGI_BASE_URL ?? DEFAULT_BASE_URL;
   const mode = opts.mode ?? MODE_ACTOR;
   const stepDelay = opts.stepDelay ?? DEFAULT_STEP_DELAY;
@@ -107,7 +107,7 @@ const runAgent = async (
 
   const createOpts: AgentCreateOptions = {
     apiKey,
-    baseUrl,
+    baseURL,
     stepObserver: stepTracker.chain(agentObserver),
     stepDelay,
   };

@@ -27,7 +27,7 @@ import { asyncAgentRegister, type AgentCreateOptions } from './registry.js';
 asyncAgentRegister('actor')((options: AgentCreateOptions = {}): Agent => {
   const {
     apiKey,
-    baseUrl,
+    baseURL,
     model = MODEL_ACTOR,
     maxSteps = DEFAULT_MAX_STEPS,
     temperature = DEFAULT_TEMPERATURE_LOW,
@@ -37,7 +37,7 @@ asyncAgentRegister('actor')((options: AgentCreateOptions = {}): Agent => {
 
   return new DefaultAgent(
     apiKey,
-    baseUrl,
+    baseURL,
     model,
     maxSteps,
     temperature,
@@ -49,7 +49,7 @@ asyncAgentRegister('actor')((options: AgentCreateOptions = {}): Agent => {
 asyncAgentRegister('thinker')((options: AgentCreateOptions = {}): Agent => {
   const {
     apiKey,
-    baseUrl,
+    baseURL,
     model = MODEL_THINKER,
     maxSteps = DEFAULT_MAX_STEPS_THINKER,
     temperature = DEFAULT_TEMPERATURE_LOW,
@@ -59,7 +59,7 @@ asyncAgentRegister('thinker')((options: AgentCreateOptions = {}): Agent => {
 
   return new DefaultAgent(
     apiKey,
-    baseUrl,
+    baseURL,
     model,
     maxSteps,
     temperature,

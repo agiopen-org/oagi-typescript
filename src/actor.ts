@@ -50,11 +50,11 @@ export default class Actor {
 
   constructor(
     apiKey?: string,
-    baseUrl?: string,
+    baseURL?: string,
     private model = MODEL_ACTOR,
     private temperature?: number,
   ) {
-    this.client = new Client(baseUrl, apiKey);
+    this.client = new Client(baseURL, apiKey);
   }
 
   private validateAndIncrementStep() {

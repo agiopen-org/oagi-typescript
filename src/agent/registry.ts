@@ -13,7 +13,7 @@ import { Agent } from './index.js';
 
 export type AgentCreateOptions = {
   apiKey?: string;
-  baseUrl?: string;
+  baseURL?: string;
   model?: string;
   maxSteps?: number;
   temperature?: number;

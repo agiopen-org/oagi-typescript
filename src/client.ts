@@ -49,29 +49,48 @@ import { parseRawOutput } from './utils/index.js';
 
 const logger = getLogger('client');
 
+export interface ClientOptions {
+  baseURL?: string;
+  apiKey?: string;
+  maxRetries?: number;
+}
+
 /**
  * HTTP client for the OAGI API.
  */
 export default class Client {
+  private baseURL: string;
+  private apiKey?: string;
   private timeout = HTTP_CLIENT_TIMEOUT;
   private client: OpenAI;
 
+  constructor(options: ClientOptions);
+  constructor(baseURL?: string, apiKey?: string, maxRetries?: number);
   constructor(
-    private baseUrl: string = process.env.OAGI_BASE_URL ?? DEFAULT_BASE_URL,
-    private apiKey: string | null = process.env.OAGI_API_KEY ?? null,
-    maxRetries = DEFAULT_MAX_RETRIES,
+    baseURL?: ClientOptions | string,
+    apiKey?: string,
+    maxRetries?: number,
   ) {
+    if (typeof baseURL === 'object') {
+      ({ baseURL, apiKey, maxRetries } = baseURL);
+    }
+    baseURL ??= process.env.OAGI_BASE_URL ?? DEFAULT_BASE_URL;
+    apiKey ??= process.env.OAGI_API_KEY;
+    maxRetries ??= DEFAULT_MAX_RETRIES;
+
+    this.baseURL = baseURL;
+    this.apiKey = apiKey;
     if (!apiKey) {
       throw new ConfigurationError(
         `OAGI API key must be provided either as 'api_key' parameter or OAGI_API_KEY environment variable. Get your API key at ${API_KEY_HELP_URL}`,
       );
     }
     this.client = new OpenAI({
-      baseURL: new URL('./v1', baseUrl).href,
+      baseURL: new URL('./v1', baseURL).href,
       apiKey,
       maxRetries,
     });
-    logger.info(`Client initialized with base_url: ${baseUrl}`);
+    logger.info(`Client initialized with base_url: ${baseURL}`);
   }
 
   private fetch(
@@ -79,9 +98,9 @@ export default class Client {
     init?: RequestInit,
   ): Promise<Response> {
     if (typeof input === 'string' || input instanceof URL) {
-      input = new URL(input, this.baseUrl);
+      input = new URL(input, this.baseURL);
     } else {
-      input = new URL(input.url, this.baseUrl);
+      input = new URL(input.url, this.baseURL);
     }
     init ??= {};
     const signal = AbortSignal.timeout(this.timeout * 1000);
@@ -162,7 +181,10 @@ export default class Client {
       task_id: taskId,
     });
     const rawOutput = response.choices[0].message.content ?? '';
-    const step = parseRawOutput(rawOutput);
+    const step = {
+      ...parseRawOutput(rawOutput),
+      usage: response.usage,
+    };
 
     // @ts-expect-error Extract task_id from response (custom field from OAGI API)
     taskId = response.task_id;

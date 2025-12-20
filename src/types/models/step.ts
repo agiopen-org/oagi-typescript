@@ -8,10 +8,12 @@
  * -----------------------------------------------------------------------------
  */
 
+import type { CompletionUsage } from 'openai/resources.js';
 import type { Action } from './action';
 
 export interface Step {
   reason?: string;
   actions: Action[];
   stop: boolean;
+  usage?: CompletionUsage;
 }
