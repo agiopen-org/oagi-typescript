@@ -1,2 +1,3 @@
 #!/bin/bash
-prettier --write "src/**/*.ts"
+prettier --write "sdk/src/**/*.ts"
+prettier --write "examples/*.ts"

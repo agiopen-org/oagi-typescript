@@ -1,0 +1,17 @@
+{
+    "name": "@oagi/examples",
+    "version": "0.0.1",
+    "description": "Example usage of OAGI SDK",
+    "scripts": {
+        "basic": "tsx basic.ts",
+        "actor": "tsx actor.ts"
+    },
+    "dependencies": {
+        "@oagi/oagi": "workspace:*"
+    },
+    "devDependencies": {
+        "@types/node": "^24.10.2",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3"
+    }
+}

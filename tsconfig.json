@@ -15,5 +15,11 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@oagi/sdk": [
+        "sdk/src/index.ts"
+      ]
+    }
   },
 }

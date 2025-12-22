@@ -1,4 +1,8 @@
 onlyBuiltDependencies:
+  - '@hurdlegroup/node-mac-permissions'
   - esbuild
   - robotjs
   - sharp
+packages:
+  - 'sdk'
+  - 'examples'
