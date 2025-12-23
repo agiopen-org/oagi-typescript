@@ -9,7 +9,8 @@
  */
 
 export { default as Actor } from './actor.js';
-export { DefaultAgent } from './agent/index.js';
+export { DefaultAgent, TaskerAgent } from './agent/index.js';
+export { AsyncAgentObserver, ExportFormat } from './agent/observer/index.js';
 export { default as Client } from './client.js';
 export {
   APIError,

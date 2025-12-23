@@ -13,6 +13,7 @@ import { ActionHandler, ImageProvider } from '../types/index.js';
 import './factories.js';
 
 export { DefaultAgent } from './default.js';
+export { TaskerAgent } from './tasker.js';
 
 export {
   asyncAgentRegister,

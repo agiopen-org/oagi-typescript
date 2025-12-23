@@ -4,7 +4,8 @@
     "description": "Example usage of OAGI SDK",
     "scripts": {
         "basic": "tsx basic.ts",
-        "actor": "tsx actor.ts"
+        "actor": "tsx actor.ts",
+        "tasker": "tsx tasker.ts"
     },
     "dependencies": {
         "@oagi/oagi": "workspace:*"

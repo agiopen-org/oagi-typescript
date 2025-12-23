@@ -17,6 +17,7 @@ export type AgentCreateOptions = {
   model?: string;
   maxSteps?: number;
   temperature?: number;
+  reflectionInterval?: number;
   stepObserver?: StepObserver | null;
   stepDelay?: number;
 };

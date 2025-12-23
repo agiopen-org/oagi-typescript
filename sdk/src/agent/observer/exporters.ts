@@ -372,7 +372,25 @@ export const exportToHtml = (events: ObserverEvent[], filePath: string) => {
     ? (import.meta as any).url
     : pathToFileURL(__filename).href;
   const moduleDir = path.dirname(fileURLToPath(moduleUrl));
-  const templatePath = path.join(moduleDir, 'report_template.html');
+  const primaryTemplate = path.join(moduleDir, 'report_template.html');
+  const fallbackTemplate = path.resolve(
+    moduleDir,
+    '..',
+    'src',
+    'agent',
+    'observer',
+    'report_template.html',
+  );
+  const templatePath = fs.existsSync(primaryTemplate)
+    ? primaryTemplate
+    : fallbackTemplate;
+
+  if (!fs.existsSync(templatePath)) {
+    throw new Error(
+      `Report template not found at ${primaryTemplate} or ${fallbackTemplate}`,
+    );
+  }
+
   const template = fs.readFileSync(templatePath, 'utf-8');
 
   const eventsData = convertEventsForHtml(events);

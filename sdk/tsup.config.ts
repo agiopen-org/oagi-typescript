@@ -9,6 +9,7 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
+  publicDir: 'src/agent/observer',
   banner: {
     js: '#!/usr/bin/env node',
   },
