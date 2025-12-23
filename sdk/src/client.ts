@@ -30,6 +30,7 @@ import {
   ValueError,
 } from './errors.js';
 import getLogger, { logTraceOnFailure } from './logger.js';
+import { getSdkHeaders } from './platform-info.js';
 import {
   GenerateResponseSchema,
   UploadFileResponseSchema,
@@ -85,10 +86,15 @@ export default class Client {
         `OAGI API key must be provided either as 'api_key' parameter or OAGI_API_KEY environment variable. Get your API key at ${API_KEY_HELP_URL}`,
       );
     }
+
+    // Get SDK headers for OpenAI client
+    const sdkHeaders = getSdkHeaders();
+
     this.client = new OpenAI({
       baseURL: new URL('./v1', baseURL).href,
       apiKey,
       maxRetries,
+      defaultHeaders: sdkHeaders,
     });
     logger.info(`Client initialized with base_url: ${baseURL}`);
   }
@@ -109,7 +115,7 @@ export default class Client {
   }
 
   private buildHeaders(apiVersion?: string) {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = getSdkHeaders();
     if (apiVersion) {
       headers['x-api-version'] = apiVersion;
     }
