@@ -29,7 +29,10 @@ import type {
   StepObserver,
 } from '../types/index.js';
 import type { Action, Step } from '../types/models/index.js';
-import type { HistoryItem, Todo as ClientTodo } from '../types/models/client.js';
+import type {
+  HistoryItem,
+  Todo as ClientTodo,
+} from '../types/models/client.js';
 import type { Agent } from './index.js';
 
 const logger = getLogger('agent.tasker');
@@ -111,7 +114,9 @@ class PlannerMemory {
   setTask(taskDescription: string, todos: string[] | TodoItem[]) {
     this.taskDescription = taskDescription;
     this.todos = todos.map(todo =>
-      typeof todo === 'string' ? { description: todo, status: 'pending' } : todo,
+      typeof todo === 'string'
+        ? { description: todo, status: 'pending' }
+        : todo,
     );
   }
 
@@ -350,12 +355,8 @@ class Planner {
   ): Promise<{ output: PlannerOutput; requestId?: string | null }> {
     const client = this.ensureClient();
     const { uuid } = await this.ensureScreenshotUuid(screenshot);
-    const {
-      taskDescription,
-      todos,
-      history,
-      taskExecutionSummary,
-    } = this.extractMemoryData(memory, context, todoIndex);
+    const { taskDescription, todos, history, taskExecutionSummary } =
+      this.extractMemoryData(memory, context, todoIndex);
 
     const response = await client.callWorker({
       workerId: 'oagi_first',
@@ -602,12 +603,7 @@ class TaskeeAgent implements Agent {
       this.todoIndex,
     );
 
-    this.recordAction(
-      'plan',
-      'initial',
-      output.reasoning,
-      output.instruction,
-    );
+    this.recordAction('plan', 'initial', output.reasoning, output.instruction);
 
     if (this.stepObserver) {
       const event: PlanEvent = {
@@ -660,7 +656,13 @@ class TaskeeAgent implements Agent {
         step = await this.actor!.step(screenshotUrl ?? screenshot, undefined);
       } catch (err) {
         logger.error(`Error getting step from OAGI: ${err}`);
-        this.recordAction('error', 'oagi_step', String(err), null, screenshotUuid);
+        this.recordAction(
+          'error',
+          'oagi_step',
+          String(err),
+          null,
+          screenshotUuid,
+        );
         break;
       }
 
@@ -741,7 +743,9 @@ class TaskeeAgent implements Agent {
     return stepsTaken;
   }
 
-  private async reflectAndDecide(imageProvider: ImageProvider): Promise<boolean> {
+  private async reflectAndDecide(
+    imageProvider: ImageProvider,
+  ): Promise<boolean> {
     logger.info('Reflecting on progress');
     const screenshot = await imageProvider.provide();
     const context = this.getContext();
@@ -950,7 +954,9 @@ export class TaskerAgent implements Agent {
     }
 
     const statusSummary = this.memory.getTodoStatusSummary();
-    logger.info(`Workflow complete. Status summary: ${JSON.stringify(statusSummary)}`);
+    logger.info(
+      `Workflow complete. Status summary: ${JSON.stringify(statusSummary)}`,
+    );
     return overallSuccess;
   }
 

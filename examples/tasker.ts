@@ -32,11 +32,7 @@ async function main() {
   const actionHandler = new DefaultActionHandler();
 
   try {
-    const success = await tasker.execute(
-      '',
-      actionHandler,
-      imageProvider,
-    );
+    const success = await tasker.execute('', actionHandler, imageProvider);
     console.log(`Tasker success: ${success}`);
   } catch (err) {
     console.error('Error during execution:', err);
