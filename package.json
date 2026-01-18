@@ -13,5 +13,6 @@
   "devDependencies": {
     "prettier": "^3.5.3",
     "husky": "^9.0.0"
-  }
+  },
+  "version": "0.1.5"
 }
