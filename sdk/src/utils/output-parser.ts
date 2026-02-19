@@ -127,6 +127,8 @@ export const parseRawOutput = (rawOutput: string): Step => {
   return {
     reason,
     actions,
-    stop: actions.some(action => action.type === 'finish' || action.type === 'fail'),
+    stop: actions.some(
+      action => action.type === 'finish' || action.type === 'fail',
+    ),
   };
 };
