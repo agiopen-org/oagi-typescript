@@ -56,7 +56,7 @@ const extractUuidFromUrl = (url: string): string | null => {
   return match ? match[1] : null;
 };
 
-type TodoStatus = ClientTodo['status'] | 'skipped';
+type TodoStatus = ClientTodo['status'];
 
 interface TodoItem {
   description: string;
@@ -180,7 +180,6 @@ class PlannerMemory {
       in_progress: 0,
       completed: 0,
       skipped: 0,
-      blocked: 0,
     };
     for (const todo of this.todos) {
       summary[todo.status] = (summary[todo.status] ?? 0) + 1;

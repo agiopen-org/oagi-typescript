@@ -29,15 +29,15 @@ export const DEFAULT_MAX_STEPS_THINKER = 100;
 export const DEFAULT_MAX_STEPS_TASKER = 60;
 
 // Maximum allowed steps per model (hard limits)
-export const MAX_STEPS_ACTOR = 30;
-export const MAX_STEPS_THINKER = 120;
+export const MAX_STEPS_ACTOR = 100;
+export const MAX_STEPS_THINKER = 300;
 
 // Reflection intervals
 export const DEFAULT_REFLECTION_INTERVAL = 4;
 export const DEFAULT_REFLECTION_INTERVAL_TASKER = 20;
 
 // Timing & Delays
-export const DEFAULT_STEP_DELAY = 0.3;
+export const DEFAULT_STEP_DELAY = 1.0;
 
 // Temperature Defaults
 export const DEFAULT_TEMPERATURE = 0.5;

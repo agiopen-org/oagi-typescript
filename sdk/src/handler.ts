@@ -292,7 +292,8 @@ export class DefaultActionHandler implements ActionHandler {
         return;
       }
 
-      case 'finish': {
+      case 'finish':
+      case 'fail': {
         this.reset();
         return;
       }

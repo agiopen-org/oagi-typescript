@@ -20,6 +20,7 @@ export const ActionTypeSchema = z.enum([
   'type',
   'scroll',
   'finish',
+  'fail',
   'wait',
   'call_user',
 ]);

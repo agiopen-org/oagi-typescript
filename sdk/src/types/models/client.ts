@@ -33,7 +33,7 @@ export interface Todo {
   /**
    * Current status of the todo
    */
-  status: 'pending' | 'in_progress' | 'completed' | 'blocked';
+  status: 'pending' | 'in_progress' | 'completed' | 'skipped';
   /**
    * Summary of execution for this todo
    */
