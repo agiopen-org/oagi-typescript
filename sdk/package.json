@@ -1,6 +1,6 @@
 {
   "name": "@oagi/oagi",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Official API of OpenAGI Foundation",
   "license": "MIT",
   "homepage": "https://agiopen.org/",
@@ -31,7 +31,6 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "@hurdlegroup/node-mac-permissions": "^2.6.1",
     "cli-table3": "^0.6.5",
     "commander": "^14.0.0",
     "jpeg-js": "^0.4.4",

@@ -32,7 +32,9 @@ async function getSharp() {
     try {
       _sharp = (await import('sharp')).default;
     } catch {
-      throw new Error('sharp is not available. Install it with: npm install sharp');
+      throw new Error(
+        'sharp is not available. Install it with: npm install sharp',
+      );
     }
   }
   return _sharp;
