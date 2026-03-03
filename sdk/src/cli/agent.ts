@@ -23,7 +23,8 @@ import { DefaultActionHandler, ScreenshotMaker } from '../handler.js';
 import getLogger from '../logger.js';
 import { displayStepTable } from './display.js';
 import { StepTracker } from './tracking.js';
-import macPerm from '@hurdlegroup/node-mac-permissions';
+// Lazy-loaded: macOS-only, not available on other platforms
+type MacPerm = typeof import('@hurdlegroup/node-mac-permissions');
 import { AgentCreateOptions } from '../agent/registry.js';
 
 const logger = getLogger('cli.agent');
@@ -36,6 +37,17 @@ const checkPermissions = async (): Promise<void> => {
     process.stdout.write(
       'On other platforms, no special permissions are required.\n',
     );
+    return;
+  }
+
+  let macPerm: MacPerm['default'];
+  try {
+    macPerm = (await import('@hurdlegroup/node-mac-permissions')).default;
+  } catch {
+    console.error(
+      'node-mac-permissions not available. Install with: npm install @hurdlegroup/node-mac-permissions',
+    );
+    process.exitCode = 1;
     return;
   }
 

@@ -14,4 +14,5 @@ export default defineConfig({
     js: '#!/usr/bin/env node',
   },
   target: 'esnext',
+  external: ['robotjs', 'sharp', '@hurdlegroup/node-mac-permissions'],
 });

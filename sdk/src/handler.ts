@@ -9,8 +9,34 @@ import {
   type ImageConfig,
   ImageConfigSchema,
 } from './types/models/image-config.js';
-import robot from 'robotjs';
-import sharp from 'sharp';
+// Lazy-load native modules so the SDK can be imported on any platform.
+// robotjs requires X11 (Linux) or Accessibility (macOS) and fails on headless CI.
+let _robot: typeof import('robotjs') | undefined;
+async function getRobot() {
+  if (!_robot) {
+    try {
+      _robot = (await import('robotjs')).default;
+    } catch {
+      throw new Error(
+        'robotjs is not available. Install it with: npm install robotjs\n' +
+          'On Linux, ensure libx11-dev and libxtst-dev are installed.',
+      );
+    }
+  }
+  return _robot;
+}
+
+let _sharp: typeof import('sharp') | undefined;
+async function getSharp() {
+  if (!_sharp) {
+    try {
+      _sharp = (await import('sharp')).default;
+    } catch {
+      throw new Error('sharp is not available. Install it with: npm install sharp');
+    }
+  }
+  return _sharp;
+}
 
 const sleep = (ms: number): Promise<void> =>
   new Promise(r => setTimeout(r, ms));
@@ -113,6 +139,8 @@ export class ScreenshotMaker implements ImageProvider {
   }
 
   async provide() {
+    const robot = await getRobot();
+    const sharp = await getSharp();
     const { width, height } = robot.getScreenSize();
     const screenshot = robot.screen.capture(0, 0, width, height);
 
@@ -175,7 +203,8 @@ export class DefaultActionHandler implements ActionHandler {
     }
   }
 
-  #denormalize(x: number, y: number): { x: number; y: number } {
+  async #denormalize(x: number, y: number): Promise<{ x: number; y: number }> {
+    const robot = await getRobot();
     const { width, height } = robot.getScreenSize();
 
     let px = Math.floor((x * width) / 1000);
@@ -190,13 +219,14 @@ export class DefaultActionHandler implements ActionHandler {
   }
 
   async #handleOne(action: Action): Promise<void> {
+    const robot = await getRobot();
     const arg = stripOuterParens(action.argument);
 
     switch (action.type) {
       case 'click': {
         const coords = parseCoords(arg);
         if (!coords) throw new Error(`Invalid coords: ${arg}`);
-        const p = this.#denormalize(coords[0], coords[1]);
+        const p = await this.#denormalize(coords[0], coords[1]);
         robot.moveMouse(p.x, p.y);
         robot.mouseClick('left', false);
         return;
@@ -205,7 +235,7 @@ export class DefaultActionHandler implements ActionHandler {
       case 'left_double': {
         const coords = parseCoords(arg);
         if (!coords) throw new Error(`Invalid coords: ${arg}`);
-        const p = this.#denormalize(coords[0], coords[1]);
+        const p = await this.#denormalize(coords[0], coords[1]);
         robot.moveMouse(p.x, p.y);
         robot.mouseClick('left', true);
         return;
@@ -214,7 +244,7 @@ export class DefaultActionHandler implements ActionHandler {
       case 'left_triple': {
         const coords = parseCoords(arg);
         if (!coords) throw new Error(`Invalid coords: ${arg}`);
-        const p = this.#denormalize(coords[0], coords[1]);
+        const p = await this.#denormalize(coords[0], coords[1]);
         robot.moveMouse(p.x, p.y);
         robot.mouseClick('left', true);
         robot.mouseClick('left', false);
@@ -224,7 +254,7 @@ export class DefaultActionHandler implements ActionHandler {
       case 'right_single': {
         const coords = parseCoords(arg);
         if (!coords) throw new Error(`Invalid coords: ${arg}`);
-        const p = this.#denormalize(coords[0], coords[1]);
+        const p = await this.#denormalize(coords[0], coords[1]);
         robot.moveMouse(p.x, p.y);
         robot.mouseClick('right', false);
         return;
@@ -233,8 +263,8 @@ export class DefaultActionHandler implements ActionHandler {
       case 'drag': {
         const coords = parseDragCoords(arg);
         if (!coords) throw new Error(`Invalid drag coords: ${arg}`);
-        const p1 = this.#denormalize(coords[0], coords[1]);
-        const p2 = this.#denormalize(coords[2], coords[3]);
+        const p1 = await this.#denormalize(coords[0], coords[1]);
+        const p2 = await this.#denormalize(coords[2], coords[3]);
         robot.moveMouse(p1.x, p1.y);
         robot.mouseToggle('down', 'left');
         robot.dragMouse(p2.x, p2.y);
@@ -278,7 +308,7 @@ export class DefaultActionHandler implements ActionHandler {
       case 'scroll': {
         const parsed = parseScroll(arg);
         if (!parsed) throw new Error(`Invalid scroll: ${arg}`);
-        const p = this.#denormalize(parsed[0], parsed[1]);
+        const p = await this.#denormalize(parsed[0], parsed[1]);
         const direction = parsed[2];
         robot.moveMouse(p.x, p.y);
         const amount =
